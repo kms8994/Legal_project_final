@@ -238,6 +238,68 @@ def upsert_result(database_url: str, result: CollectCasesResult, params: dict[st
             for case in result.cases:
                 cursor.execute(
                     """
+                    select id
+                    from cases
+                    where external_id = %s
+                       or (
+                         case_no = %s
+                         and decision_date is not distinct from %s
+                         and court_name = %s
+                       )
+                       or source_hash = %s
+                    limit 1
+                    """,
+                    (
+                        case.external_id,
+                        case.case_no,
+                        case.decision_date,
+                        case.court_name,
+                        case.source_hash,
+                    ),
+                )
+                existing = cursor.fetchone()
+                if existing:
+                    cursor.execute(
+                        """
+                        update cases
+                        set
+                          external_id = %s,
+                          case_no = %s,
+                          court_name = %s,
+                          court_level = %s,
+                          decision_date = %s,
+                          case_name = %s,
+                          case_type = %s,
+                          legal_domain = %s,
+                          source_url = %s,
+                          raw_text = %s,
+                          raw_html = %s,
+                          source_hash = %s,
+                          pipeline_run_id = %s,
+                          updated_at = now()
+                        where id = %s
+                        """,
+                        (
+                            case.external_id,
+                            case.case_no,
+                            case.court_name,
+                            case.court_level,
+                            case.decision_date,
+                            case.case_name,
+                            case.case_type,
+                            case.legal_domain,
+                            case.source_url,
+                            case.raw_text,
+                            case.raw_html,
+                            case.source_hash,
+                            pipeline_run_id,
+                            existing[0],
+                        ),
+                    )
+                    continue
+
+                cursor.execute(
+                    """
                     insert into cases (
                       external_id, case_no, court_name, court_level, decision_date,
                       case_name, case_type, legal_domain, source_url, raw_text,
