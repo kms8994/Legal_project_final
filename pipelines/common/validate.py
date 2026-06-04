@@ -115,7 +115,6 @@ def adjust_confidence(confidence: float, reasons: list[str]) -> float:
 
 def has_hard_failure(reasons: list[str]) -> bool:
     hard_prefixes = [
-        "cited_article_unknown:",
         "cited_article_missing_normalized_ref",
         "cited_articles_evidence_offset_invalid",
         "cited_articles_evidence_offset_out_of_range",

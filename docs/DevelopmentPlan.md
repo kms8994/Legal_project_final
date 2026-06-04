@@ -201,10 +201,9 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:8000/api/v1/search/statute
 다음 구현 단위:
 
 ```text
-1. validate invalid 원인인 범위 밖 인용 조문 처리 정책을 정한다.
-2. 판례 상세 API를 DB repository + fake repository 테스트 방식으로 구현한다.
-3. 조문 검색 UI에서 판례 상세 화면으로 이동하는 흐름을 구현한다.
-4. 자연어 intent parser 또는 embed 파이프라인으로 진행한다.
+1. 판례 상세 API를 DB repository + fake repository 테스트 방식으로 구현한다.
+2. 조문 검색 UI에서 판례 상세 화면으로 이동하는 흐름을 구현한다.
+3. 자연어 intent parser 또는 embed 파이프라인으로 진행한다.
 ```
 
 ### 최근 진행 상황
@@ -233,7 +232,8 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:8000/api/v1/search/statute
 | 2026-06-04 | Supabase PostgreSQL 연결, pgvector extension/core schema 적용, 정상 한글 seed 3건 적재 | 완료 |
 | 2026-06-04 | Next.js BFF `/api/search/statute`와 조문 검색 결과 화면 구현, lint/build/API test 통과 | 완료 |
 | 2026-06-04 | Supabase 기준 `collect_laws`, `collect_cases`, `normalize`, `split`, `extract`, `structure`, `validate` limit=3 DB upsert 실검증 | 완료 |
-| 2026-06-04 | validate 결과 3건 중 1건 auto_validated, 2건 invalid 확인. invalid 원인은 수집 범위 밖 인용 조문 `민법_제399조`, `민법_제766조` | 후속 필요 |
+| 2026-06-04 | 범위 밖 인용 조문 정책 반영: `민법 제399조`, `민법 제766조`를 P0 수집 범위에 추가하고 unknown article은 invalid 대신 needs_review 처리 | 완료 |
+| 2026-06-04 | 추가 조문 수집 후 validate 재실행: 6건 중 6건 auto_validated, invalid 0건 확인 | 완료 |
 
 ## 2. 개발 원칙
 
@@ -660,6 +660,8 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - [x] extract Supabase DB upsert 실검증
 - [x] structure Supabase DB upsert 실검증
 - [x] validate Supabase DB 갱신 실검증
+- [x] 범위 밖 인용 조문 needs_review 정책 적용
+- [x] `민법 제399조`, `민법 제766조` P0 수집 범위 추가
 - [ ] embed 구현
 - [ ] load/index 구현
 - [ ] source_hash 중복 제거
@@ -791,7 +793,6 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 
 현재 문서 기준 다음 작업 순서는 아래가 가장 좋다.
 
-1. 범위 밖 인용 조문 검증 정책을 정한다. 현재 `민법_제399조`, `민법_제766조`가 unknown article로 invalid 처리된다.
-2. 판례 상세 API를 구현한다.
-3. 조문 검색 UI에서 판례 상세 화면으로 이동하는 흐름을 구현한다.
-4. 자연어 intent parser 또는 embed 파이프라인으로 진행한다.
+1. 판례 상세 API를 구현한다.
+2. 조문 검색 UI에서 판례 상세 화면으로 이동하는 흐름을 구현한다.
+3. 자연어 intent parser 또는 embed 파이프라인으로 진행한다.

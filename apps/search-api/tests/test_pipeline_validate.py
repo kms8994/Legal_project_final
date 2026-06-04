@@ -6,7 +6,7 @@ from pipelines.common.validate import validate_structure
 def test_validate_structure_auto_validates_good_rule_extract() -> None:
     structure = {
         "cited_articles": [{"normalized_ref": "민법_제750조"}],
-        "outcome": {"disposition": "일부 인용", "direction": "원고 일부 유리"},
+        "outcome": {"disposition": "일부 인용", "direction": "원고 일부 승소"},
         "facets": {"legal_domain": "손해배상"},
         "evidence_spans": {
             "cited_articles": [{"char_start": 0, "char_end": 8, "text": "민법 제750조"}],
@@ -22,10 +22,10 @@ def test_validate_structure_auto_validates_good_rule_extract() -> None:
     assert result.reasons == []
 
 
-def test_validate_structure_marks_unknown_article_invalid() -> None:
+def test_validate_structure_marks_unknown_article_needs_review() -> None:
     structure = {
         "cited_articles": [{"normalized_ref": "민법_제999조"}],
-        "outcome": {"disposition": "인용", "direction": "원고 유리"},
+        "outcome": {"disposition": "인용", "direction": "원고 승소"},
         "facets": {"legal_domain": "손해배상"},
         "evidence_spans": {
             "cited_articles": [{"char_start": 0, "char_end": 8, "text": "민법 제999조"}],
@@ -36,7 +36,7 @@ def test_validate_structure_marks_unknown_article_invalid() -> None:
 
     result = validate_structure(structure, {"민법_제750조"}, text_length=40)
 
-    assert result.review_status == "invalid"
+    assert result.review_status == "needs_review"
     assert "cited_article_unknown:민법_제999조" in result.reasons
     assert result.confidence_score < 0.8
 
