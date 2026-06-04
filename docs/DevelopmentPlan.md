@@ -943,3 +943,26 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
   - 조문 검색의 로직 결함은 현재 평가셋 기준으로 대부분 해소됐다.
   - 전체 조문 지표에 남는 실패는 `민법 제756조`, `민법 제760조`처럼 현재 범위 밖인 `missing_scope` 항목이다.
   - 다음 우선순위는 needs_review 샘플 20건 분석과 구조화 fallback 개선이다.
+
+### 17.9 needs_review 샘플 분석 결과
+
+- 2026-06-05 기준 `needs_review` 174건의 validation reason을 집계하고 최근 20건을 샘플 분석했다.
+- 분석 문서: `docs/NeedsReviewAnalysis.md`.
+- 주요 reason:
+  - `confidence_below_threshold`: 123건
+  - `legal_domain_unknown`: 52건
+  - `cited_articles_empty`: 34건
+  - `cited_article_unknown:민법_제756조`: 15건
+  - `cited_article_unknown:민법_제760조`: 11건
+  - `cited_article_unknown:민법_제758조`: 10건
+- 해석:
+  - `needs_review=0.77`은 단일 버그가 아니라 범위 문제, 도메인 문제, 추출 신뢰도 문제가 섞인 결과다.
+  - `cited_article_unknown:*` 중 상당수는 실제 조문이지만 현재 MVP `articles` DB에 없는 future-scope 항목이다.
+  - 취득세, 상속, 토지인도, 근저당권, 이혼 등 손해배상 학습 MVP와 약하게 관련된 케이스가 섞여 있다.
+  - seed/sample 텍스트 일부는 법적 책임을 설명하지만 명시적 `민법 제...조` 문구가 없어 rule extractor가 조문을 못 잡는다.
+- 다음 구현 우선순위:
+  1. validation reason을 `quality_issue`, `scope_issue`, `out_of_scope`, `low_confidence`로 분류한다.
+  2. `cited_article_unknown:*`은 문법적으로 정상인 조문이면 파싱 실패가 아니라 `missing_scope`로 보고한다.
+  3. `legal_domain_unknown`은 검색 품질 실패가 아니라 MVP relevance 분류 문제로 따로 본다.
+  4. `불법행위책임`, `위자료`, `과실상계` 같은 고신뢰 개념은 명시 조문이 없어도 낮은 confidence의 inferred citation 후보로 다룬다.
+  5. 재검증 때 전체 needs_review뿐 아니라 true quality issue rate, missing scope rate, out-of-scope rate를 따로 기록한다.
