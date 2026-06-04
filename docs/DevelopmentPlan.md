@@ -813,9 +813,9 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 
 현재 문서 기준 다음 작업 순서는 아래가 가장 좋다.
 
-1. `pipeline:embed`를 OpenAI provider로 소량 실행해 Supabase `case_embeddings` 적재를 검증한다.
+1. 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 기록한다.
 2. 자연어 검색/비교 후보의 embedding score 품질을 샘플 쿼리로 점검한다.
-3. 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 기록한다.
+3. needs_review 비율이 높은 원인을 확인하고 structure rule fallback을 보강한다.
 4. 익명 세션/검색 로그/비교 로그는 운영·평가 단계로 보류한다.
 
 ## 17. 로컬 임베딩 적재 테스트와 판례 수집 우선순위
@@ -859,6 +859,18 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 
 ### 17.3 다음 실행 순서
 
-1. `collect_cases`로 P0 조문 + 교통사고/과실상계 키워드 중심 300~500건을 먼저 수집한다.
-2. `normalize -> split -> structure -> validate -> embed` 순서로 재처리한다.
-3. 적재 후 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 측정한다.
+1. 적재 후 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 측정한다.
+2. needs_review 판례 샘플을 확인해 구조화 fallback 규칙을 보강한다.
+3. 검색/비교 화면에서 샘플 쿼리 E2E smoke test를 진행한다.
+
+### 17.4 300건 수집과 재처리 결과
+
+- 2026-06-05 기준 `collect_cases --scope damages --priority P0 --limit 300 --display 100 --include-keywords` 실행 성공.
+- 수집 결과: `queries_run=3`, `list_rows_seen=300`, `unique_case_ids=300`, `details_fetched=300`, `cases_upserted=300`, `failed_items=0`.
+- 중복 판례가 `cases_case_no_decision_date_court_name_key` 제약에 걸려 수집이 중단되던 문제를 수정했다. 이제 `external_id`, `(case_no, decision_date, court_name)`, `source_hash` 기준 기존 row를 찾아 갱신한다.
+- `pipeline:normalize -- --limit 300`: `input_count=220`, `normalized_count=220`.
+- `pipeline:split -- --limit 50`: `input_count=50`, `cases_processed=50`, `paragraphs_upserted=7547`. 이후 동일 명령 재실행 시 `input_count=0`으로 문단 없는 판례가 더 없음을 확인했다.
+- `pipeline:structure -- --limit 300`: `input_count=217`, `structures_upserted=217`, `needs_review=22`.
+- `pipeline:validate -- --limit 300`: `input_count=226`, `auto_validated=52`, `needs_review=174`, `invalid=0`.
+- `pipeline:embed -- --limit 300`: `case_inputs=220`, `paragraph_inputs=300`, `embeddings_upserted=1032`.
+- `pipeline:split -- --limit 300 --overwrite`는 Supabase statement timeout에 걸렸다. 대량 overwrite는 작은 batch로 나누거나 timeout 설정을 별도로 조정한다.
