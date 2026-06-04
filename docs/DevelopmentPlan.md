@@ -966,3 +966,130 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
   3. `legal_domain_unknown`은 검색 품질 실패가 아니라 MVP relevance 분류 문제로 따로 본다.
   4. `불법행위책임`, `위자료`, `과실상계` 같은 고신뢰 개념은 명시 조문이 없어도 낮은 confidence의 inferred citation 후보로 다룬다.
   5. 재검증 때 전체 needs_review뿐 아니라 true quality issue rate, missing scope rate, out-of-scope rate를 따로 기록한다.
+
+### 17.10 다음 작업 실행 지침: needs_review 분류 개선
+
+이 섹션은 다음 작업자가 계획서만 읽고 바로 구현할 수 있도록 작성한 실행 지침이다. DB 수집 범위 확대는 아직 하지 않는다. 먼저 validation 의미를 분리해 평가 신호를 정확하게 만든다.
+
+#### 목표
+
+- `needs_review`를 단일 실패로 보지 않고 원인별로 분리한다.
+- 데이터 범위 부족(`missing_scope`)과 실제 구조화 품질 문제(`quality_issue`)를 구분한다.
+- 평가 리포트에 다음 지표를 추가한다.
+  - `true_quality_issue_rate`
+  - `missing_scope_rate`
+  - `out_of_scope_rate`
+  - `low_confidence_rate`
+
+#### 수정 대상 파일
+
+| 목적 | 파일 |
+|------|------|
+| validation reason 생성/분류 | `pipelines/common/validate.py` |
+| DB validation 실행 및 evidence_spans에 결과 저장 | `pipelines/validate.py` |
+| 평가 리포트 지표 계산 | `scripts/evaluate_mvp.py` |
+| 평가 기준 문서 | `docs/EvaluationSet.md` |
+| 회귀 테스트 | `apps/search-api/tests/test_pipeline_validate.py` |
+
+#### 현재 원인 분포
+
+현재 `needs_review` 174건 중 주요 reason은 아래와 같다.
+
+```text
+confidence_below_threshold: 123
+legal_domain_unknown: 52
+cited_articles_empty: 34
+cited_article_unknown:민법_제756조: 15
+cited_article_unknown:민법_제760조: 11
+cited_article_unknown:민법_제758조: 10
+outcome_direction_unknown: 7
+outcome_disposition_unknown: 7
+cited_articles_evidence_missing: 3
+outcome_evidence_missing: 1
+```
+
+#### 구현 규칙
+
+1. `cited_article_unknown:*` 분류
+   - normalized ref 형식이 정상이고 현재 `articles` DB에만 없으면 `scope_issue`로 분류한다.
+   - 예: `민법_제756조`, `민법_제760조`, `민법_제758조`.
+   - 이 경우 reason은 유지하되 category에 `missing_scope`를 넣는다.
+
+2. `legal_domain_unknown` 분류
+   - case title 또는 facets가 손해배상 도메인을 확신하지 못하면 `out_of_scope` 또는 `weakly_related`로 분류한다.
+   - 단, title에 `손해배상`, text/facets에 `불법행위`, `위자료`, `과실상계`, `자동차`가 있으면 바로 out_of_scope로 보지 않는다.
+
+3. `confidence_below_threshold` 분류
+   - 다른 hard quality reason이 없고 outcome/domain/evidence가 어느 정도 있으면 `low_confidence`로 분류한다.
+   - unknown article이 유일한 원인이면 `quality_issue`가 아니라 `scope_issue`로 본다.
+
+4. hard quality reason
+   - 아래는 `quality_issue`로 분류한다.
+     - `cited_articles_empty`
+     - `cited_articles_evidence_missing`
+     - `outcome_disposition_unknown`
+     - `outcome_direction_unknown`
+     - `outcome_evidence_missing`
+
+5. 저장 형식
+   - `case_structures.evidence_spans.validation` 아래에 기존 `status`, `reasons`를 유지한다.
+   - 다음 필드를 추가한다.
+
+```json
+{
+  "status": "needs_review",
+  "reasons": ["confidence_below_threshold"],
+  "categories": ["low_confidence"],
+  "primary_category": "low_confidence"
+}
+```
+
+#### 테스트 추가 기준
+
+`apps/search-api/tests/test_pipeline_validate.py`에 최소 아래 케이스를 추가한다.
+
+1. unknown but syntactically valid article
+   - 입력: `cited_articles=[{"normalized_ref":"민법_제756조"}]`, known_articles에는 없음
+   - 기대: reason에 `cited_article_unknown:민법_제756조`, category에 `missing_scope`
+
+2. explicit extraction failure
+   - 입력: `cited_articles=[]`
+   - 기대: category에 `quality_issue`
+
+3. legal domain unknown
+   - 입력: facets legal_domain unknown
+   - 기대: category에 `out_of_scope` 또는 `weakly_related`
+
+4. low confidence only
+   - 입력: confidence만 threshold 미만이고 cited/outcome/evidence는 있음
+   - 기대: category에 `low_confidence`
+
+#### 실행 순서
+
+```powershell
+npm.cmd run api:test
+npm.cmd run pipeline:validate -- --limit 300
+npm.cmd run eval:mvp
+```
+
+`pipeline:validate`와 `eval:mvp`는 Supabase DB 연결이 필요하다.
+
+#### 완료 기준
+
+- `npm.cmd run api:test` 통과.
+- `npm.cmd run eval:mvp` 리포트에 아래 지표가 추가된다.
+  - `true_quality_issue_rate`
+  - `missing_scope_rate`
+  - `out_of_scope_rate`
+  - `low_confidence_rate`
+- 전체 `needs_review_rate`가 크게 낮아지지 않아도 괜찮다. 이번 작업의 목적은 무리하게 통과시키는 것이 아니라 원인을 분리하는 것이다.
+- `docs/NeedsReviewAnalysis.md` 또는 `docs/EvaluationRun.md`에 분류 후 수치를 기록한다.
+
+#### 다음 단계 후보
+
+분류 지표가 생긴 뒤에만 아래 중 우선순위를 고른다.
+
+1. `quality_issue`가 높으면 extractor/section split/outcome rule을 고친다.
+2. `missing_scope`가 높으면 그때 `민법 제756조`, `민법 제760조`, `민법 제758조` 등 조문 DB 확장을 검토한다.
+3. `out_of_scope`가 높으면 수집 쿼리 또는 MVP relevance filter를 조정한다.
+4. `low_confidence`가 높으면 confidence scoring을 조정하거나 inferred citation을 추가한다.
