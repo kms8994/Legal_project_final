@@ -5,8 +5,9 @@ from datetime import date
 from fastapi.testclient import TestClient
 
 from app.api.search import get_statute_search_service
+from app.core.config import settings
 from app.main import app
-from app.repositories.statute_search import ArticleRecord, CaseSearchRow
+from app.repositories.statute_search import ArticleRecord, CaseSearchRow, SearchEvidenceRecord
 from app.services.statute_search import StatuteSearchService
 
 
@@ -57,6 +58,95 @@ class FakeStatuteRepository:
             )
         ]
 
+    def list_cases_for_natural_search(self) -> list[CaseSearchRow]:
+        return [
+            CaseSearchRow(
+                case_id="11111111-1111-1111-1111-111111111111",
+                case_no="2021??2345",
+                court_name="?踰뺤썝",
+                court_level="supreme",
+                decision_date=date(2022, 3, 15),
+                case_name="Traffic damages",
+                case_type="civil",
+                legal_domain="damages",
+                source_url="https://www.law.go.kr/precInfoP.do?precSeq=000000",
+                cited_articles=["civil_act_750"],
+                facts="traffic accident victim negligence damages",
+                conclusion="The claim was partially accepted.",
+                outcome={"disposition": "partially accepted", "key_factor": "negligence"},
+                evidence_spans={"facts": ["p12"], "reasoning": ["p18"]},
+                review_status="pending",
+                confidence_score=0.82,
+            ),
+            CaseSearchRow(
+                case_id="22222222-2222-2222-2222-222222222222",
+                case_no="2020??1111",
+                court_name="District Court",
+                court_level="district",
+                decision_date=date(2020, 1, 1),
+                case_name="Contract",
+                case_type="civil",
+                legal_domain="contract",
+                source_url=None,
+                cited_articles=[],
+                facts="contract payment dispute",
+                conclusion="The claim was dismissed.",
+                outcome={"disposition": "dismissed"},
+                evidence_spans={"facts": ["p01"]},
+                review_status="pending",
+                confidence_score=0.7,
+            ),
+        ]
+
+    def embedding_scores_for_query(self, query_embedding: str, embedding_model: str) -> dict[str, float]:
+        assert query_embedding.startswith("[")
+        assert embedding_model == "local-hash-embedding-v1"
+        return {
+            "11111111-1111-1111-1111-111111111111": 0.9,
+            "22222222-2222-2222-2222-222222222222": 0.1,
+        }
+
+    def evidence_snippets_for_cases(
+        self,
+        case_ids: list[str],
+        evidence_ids_by_case: dict[str, list[str]],
+    ) -> dict[str, list[SearchEvidenceRecord]]:
+        snippets = {
+            "11111111-1111-1111-1111-111111111111": [
+                SearchEvidenceRecord(
+                    case_id="11111111-1111-1111-1111-111111111111",
+                    evidence_id="p12",
+                    section_type="facts",
+                    paragraph_order=12,
+                    text="Driver negligence evidence paragraph.",
+                ),
+                SearchEvidenceRecord(
+                    case_id="11111111-1111-1111-1111-111111111111",
+                    evidence_id="p18",
+                    section_type="reasoning",
+                    paragraph_order=18,
+                    text="Court reasoning evidence paragraph.",
+                ),
+            ],
+            "22222222-2222-2222-2222-222222222222": [
+                SearchEvidenceRecord(
+                    case_id="22222222-2222-2222-2222-222222222222",
+                    evidence_id="p01",
+                    section_type="facts",
+                    paragraph_order=1,
+                    text="Contract evidence paragraph.",
+                ),
+            ],
+        }
+        return {
+            case_id: [
+                snippet
+                for snippet in snippets.get(case_id, [])
+                if snippet.evidence_id in set(evidence_ids_by_case.get(case_id, []))
+            ]
+            for case_id in case_ids
+        }
+
 
 def override_statute_search_service() -> StatuteSearchService:
     return StatuteSearchService(FakeStatuteRepository())
@@ -81,6 +171,8 @@ def test_search_statute_returns_contract_shape() -> None:
     assert body["pagination"]["total"] == 1
     assert body["results"][0]["case_no"] == "2021다12345"
     assert body["results"][0]["evidence_ids"] == ["p12", "p18"]
+    assert body["results"][0]["evidence_snippets"][0]["evidence_id"] == "p12"
+    assert body["results"][0]["evidence_snippets"][0]["text"] == "Driver negligence evidence paragraph."
 
 
 def test_search_statute_returns_404_for_unknown_internal_article() -> None:
@@ -97,3 +189,28 @@ def test_search_statute_returns_404_for_unknown_internal_article() -> None:
 
     assert response.status_code == 404
     assert response.json()["detail"]["code"] == "ARTICLE_NOT_FOUND"
+
+
+def test_search_natural_returns_parsed_intent_and_ranked_results() -> None:
+    settings.embedding_provider = "local"
+    settings.embedding_model = "local-hash-embedding-v1"
+    app.dependency_overrides[get_statute_search_service] = override_statute_search_service
+    client = TestClient(app)
+
+    try:
+        response = client.post(
+            "/api/v1/search/natural",
+            json={"query": "traffic accident victim negligence damages", "page": 1, "size": 10},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["search_method"] == "structured_fallback"
+    assert body["parsed_intent"]["legal_domain"] == "damages"
+    assert body["parsed_intent"]["confidence"] > 0.5
+    assert body["pagination"]["total"] == 2
+    assert body["results"][0]["case_no"] == "2021??2345"
+    assert body["results"][0]["evidence_ids"] == ["p12", "p18"]
+    assert body["results"][0]["evidence_snippets"][1]["evidence_id"] == "p18"

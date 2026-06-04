@@ -3,12 +3,18 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.engine import Connection
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.db.session import get_connection
 from app.repositories.statute_search import PostgresStatuteSearchRepository
-from app.schemas.search import ErrorResponse, StatuteSearchRequest, StatuteSearchResponse
+from app.schemas.search import (
+    ErrorResponse,
+    NaturalSearchRequest,
+    NaturalSearchResponse,
+    StatuteSearchRequest,
+    StatuteSearchResponse,
+)
 from app.services.article_normalizer import ArticleParseError
 from app.services.statute_search import ArticleNotFoundError, StatuteSearchService
 
@@ -51,7 +57,7 @@ def search_statute(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "code": "ARTICLE_NOT_FOUND",
-                "message": f"내부 법령 DB에서 해당 조문을 찾을 수 없습니다: {exc}",
+                "message": f"Article was not found in the internal DB: {exc}",
             },
         ) from exc
     except SQLAlchemyError as exc:
@@ -59,6 +65,33 @@ def search_statute(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
                 "code": "SEARCH_UNAVAILABLE",
-                "message": "검색 DB에 연결할 수 없습니다.",
+                "message": "Search DB is unavailable.",
+            },
+        ) from exc
+
+
+@router.post(
+    "/natural",
+    response_model=NaturalSearchResponse,
+    responses={
+        503: {"model": ErrorResponse},
+    },
+)
+def search_natural(
+    request: NaturalSearchRequest,
+    service: StatuteSearchService = Depends(get_statute_search_service),
+) -> NaturalSearchResponse:
+    try:
+        return service.search_natural(
+            query=request.query,
+            page=request.page,
+            size=request.size,
+        )
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "SEARCH_UNAVAILABLE",
+                "message": "Search DB is unavailable.",
             },
         ) from exc

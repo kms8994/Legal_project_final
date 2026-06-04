@@ -21,8 +21,9 @@
 | Pipeline | Python CLI, 이후 cron 또는 scheduler |
 | RAG | 검색용, 비교용, 생성용으로 분리 |
 | 비교 추천 원칙 | 사실관계/material facts 유사도 최우선, 결과 차이는 낮은 가중치 |
-| 임베딩 MVP 기본값 | 768차원 단일 모델로 먼저 구현 |
-| 임베딩 모델 비교 | 코드 구현 이후 평가 단계에서 수행 |
+| 임베딩 MVP 기본값 | DB `vector(768)` 유지, 무료 로컬 `dragonkue/multilingual-e5-small-ko` 사용, 384차원 출력은 768차원으로 padding |
+| 임베딩 모델 비교 | MVP 구현 이후 Korean local model, `bge-m3`, API embedding 후보를 평가 세트로 비교 |
+| 외부 LLM 전송 원칙 | 사용자 자연어 사건 설명은 외부 LLM에 보내지 않고 검색 구조화/DB retrieval에만 사용 |
 | 과금/로그인 | MVP 제외 |
 | 관리자 UI | MVP 제외, review_status 기반 수동 검수 |
 
@@ -201,9 +202,10 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:8000/api/v1/search/statute
 다음 구현 단위:
 
 ```text
-1. 판례 상세 API를 DB repository + fake repository 테스트 방식으로 구현한다.
-2. 조문 검색 UI에서 판례 상세 화면으로 이동하는 흐름을 구현한다.
-3. 자연어 intent parser 또는 embed 파이프라인으로 진행한다.
+1. `pipeline:embed`를 OpenAI provider로 소량 실행해 Supabase `case_embeddings` 적재를 검증한다.
+2. 자연어 검색/비교 후보의 embedding score 품질을 샘플 쿼리로 점검한다.
+3. 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 기록한다.
+4. 익명 세션/검색 로그/비교 로그는 MVP 핵심 흐름 이후 운영·평가 단계에서 붙인다.
 ```
 
 ### 최근 진행 상황
@@ -234,6 +236,17 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:8000/api/v1/search/statute
 | 2026-06-04 | Supabase 기준 `collect_laws`, `collect_cases`, `normalize`, `split`, `extract`, `structure`, `validate` limit=3 DB upsert 실검증 | 완료 |
 | 2026-06-04 | 범위 밖 인용 조문 정책 반영: `민법 제399조`, `민법 제766조`를 P0 수집 범위에 추가하고 unknown article은 invalid 대신 needs_review 처리 | 완료 |
 | 2026-06-04 | 추가 조문 수집 후 validate 재실행: 6건 중 6건 auto_validated, invalid 0건 확인 | 완료 |
+| 2026-06-04 | 판례 상세 API/화면과 비교 후보 API/화면 구현, structured fallback Set B 랭킹 및 테스트 추가 | 완료 |
+| 2026-06-04 | `POST /api/v1/compare` 비교 분석 API와 `/compare?base=&target=` 화면 구현, structured fallback 분석/근거 링크 테스트 추가 | 완료 |
+| 2026-06-04 | `POST /api/v1/feedback` 피드백 API와 비교 분석 화면 피드백 UI 구현, label 검증/저장 테스트 추가 | 완료 |
+| 2026-06-04 | 자연어 intent parser와 `POST /api/v1/search/natural` structured fallback 검색 API/화면 탭 구현, parsed intent 패널 추가 | 완료 |
+| 2026-06-04 | deterministic local fallback `pipeline:embed` 구현, facts/issue/material_facts/combined/paragraph embedding 생성 및 자연어 검색·비교 후보 랭킹에 embedding score 연결 | 완료 |
+| 2026-06-04 | DB `vector(768)` 유지 결정, OpenAI `text-embedding-3-small` dimensions=768 provider 추가, API 키 없을 때 local fallback 유지 | 완료 |
+| 2026-06-04 | OpenAI 결제 제약으로 무료 로컬 `dragonkue/multilingual-e5-small-ko` provider 전환, sentence-transformers 설치 및 dry-run 임베딩 생성 확인 | 완료 |
+| 2026-06-04 | 검색 결과 카드에 `evidence_ids`뿐 아니라 실제 근거 문단 `evidence_snippets`를 포함하도록 API/UI 연결 | 완료 |
+| 2026-06-04 | `GET /api/v1/cases/{case_id}/rag-summary` 근거 제한 요약 API와 판례 상세 화면 Grounded summary 섹션 구현 | 완료 |
+| 2026-06-04 | `GEMINI_API_KEY`가 있으면 Gemini `generateContent`로 판례 RAG 요약을 생성하고, 키 없음/실패 시 로컬 grounded 요약으로 fallback하도록 구현 | 완료 |
+| 2026-06-04 | 사용자 자연어 사건 설명은 외부 LLM에 보내지 않고, 외부 생성 모델에는 공개 판례의 구조화 필드와 선택된 evidence 문단만 보내는 정책 확정 | 완료 |
 
 ## 2. 개발 원칙
 
@@ -244,6 +257,10 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:8000/api/v1/search/statute
 - 비교 추천은 사실관계 유사도를 최우선으로 둔다.
 - 구현 중 판단이 흔들리면 `PRD.md`와 `RAGAndRankingSpec.md`를 우선 기준으로 삼는다.
 - 법령정보센터 API는 런타임 백엔드가 아니라 로컬/배치 파이프라인에서만 호출한다.
+- 사용자 자연어 사건 설명은 개인 정보와 민감 맥락이 포함될 수 있으므로 외부 LLM에 전송하지 않는다.
+- 사용자 입력은 intent parsing, 키워드 추출, 로컬 임베딩, DB retrieval까지만 사용한다.
+- Gemini 등 외부 생성 모델에는 DB에 저장된 공개 판례의 구조화 필드와 선택된 evidence 문단만 전송한다.
+- 판례 원문 전체는 외부 생성 모델에 보내지 않고, Top-K evidence snippets만 보낸다.
 
 ## 3. 추천 폴더 구조
 
@@ -481,9 +498,9 @@ RAG와 임베딩 모델 검증은 실제 DB, 검색 API, 비교 API가 구현된
 검증 후보:
 
 ```text
-1. ko-sbert 계열 768차원
-2. bge-m3
-3. API embedding 모델
+1. Korean lightweight local model
+2. OpenAI text-embedding-3-small, dimensions=768
+3. bge-m3
 ```
 
 chunk 전략 후보:
@@ -662,7 +679,7 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - [x] validate Supabase DB 갱신 실검증
 - [x] 범위 밖 인용 조문 needs_review 정책 적용
 - [x] `민법 제399조`, `민법 제766조` P0 수집 범위 추가
-- [ ] embed 구현
+- [x] embed 구현
 - [ ] load/index 구현
 - [ ] source_hash 중복 제거
 - [x] evidence span 생성
@@ -676,44 +693,45 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - [x] 내부 DB 기반 조문 검증
 - [x] 조문 검색 API
 - [x] 조문 검색 API 실DB smoke test
-- [ ] 자연어 intent parser
-- [ ] 자연어 검색 API
-- [ ] evidence retrieval
-- [ ] 판례 상세 API
-- [ ] 비교 후보 API
-- [ ] 비교 분석 API
-- [ ] 피드백 API
+- [x] 자연어 intent parser
+- [x] 자연어 검색 API
+- [x] evidence retrieval
+- [x] 판례 상세 API
+- [x] 비교 후보 API
+- [x] 비교 분석 API
+- [x] 피드백 API
 - [ ] LLM timeout fallback
 - [ ] 공통 에러 코드
 - [ ] 런타임 외부 법령 API 호출 없음 확인
 
 ### G. RAG와 랭킹
 
-- [ ] facts embedding 생성
-- [ ] issue embedding 생성
-- [ ] material_facts embedding 생성
-- [ ] combined embedding 생성
-- [ ] paragraph evidence embedding 생성
+- [x] facts embedding 생성
+- [x] issue embedding 생성
+- [x] material_facts embedding 생성
+- [x] combined embedding 생성
+- [x] paragraph evidence embedding 생성
 - [ ] 조문 검색 가중치 적용
-- [ ] 자연어 검색 가중치 적용
-- [ ] 비교 후보 Set B 기본 가중치 적용
-- [ ] outcome difference 낮은 가중치 유지
+- [x] 자연어 검색 가중치 적용
+- [x] 비교 후보 Set B 기본 가중치 적용
+- [x] outcome difference 낮은 가중치 유지
 - [ ] 결과 차이보다 사실관계 유사도 우선 검증
 - [ ] LLM 생성 결과 evidence id 검증
+- [x] 판례 상세 근거 제한 요약 API
 
 ### H. 프론트엔드와 UI/UX
 
 - [x] 검색 시작 화면
-- [ ] 검색 모드 탭
+- [x] 검색 모드 탭
 - [x] 검색 결과 카드
-- [ ] 자연어 parsed intent 패널
+- [x] 자연어 parsed intent 패널
 - [ ] 기준 판례 선택
-- [ ] 비교 후보 화면
-- [ ] 비교 후보 추천 이유 표시
-- [ ] 판례 비교 매트릭스
-- [ ] 원문 근거 문단 표시
-- [ ] 판례 상세 화면
-- [ ] 피드백 UI
+- [x] 비교 후보 화면
+- [x] 비교 후보 추천 이유 표시
+- [x] 판례 비교 매트릭스
+- [x] 원문 근거 문단 표시
+- [x] 판례 상세 화면
+- [x] 피드백 UI
 - [ ] 면책 고지 표시
 - [ ] 모바일 비교 화면
 - [ ] 결과 없음/후보 부족/LLM 실패 예외 UI
@@ -724,10 +742,12 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - [ ] 익명 세션 쿠키 또는 localStorage 정책 확정
 - [ ] 검색 로그 저장
 - [ ] 비교 로그 저장
-- [ ] 피드백 저장
+- [x] 피드백 저장
 - [ ] 검색 rate limit
 - [ ] 비교 분석 rate limit
 - [ ] 검색 로그 90일 보존 정책 반영
+
+보류 메모: anonymous_session_id, 검색 로그, 비교 로그, 로그 보존 정책은 기능 품질 개선과 운영 분석에 필요하지만, 현재 MVP 핵심 사용자 흐름은 이미 `검색 → 판례 상세 → 비교 후보 → 비교 분석 → 피드백`까지 연결되어 있다. 따라서 이 항목들은 자연어 검색/임베딩 기반 검색을 붙인 뒤 운영·평가 단계에서 구현한다.
 
 ### J. 평가와 QA
 
@@ -768,17 +788,17 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 
 - [x] FastAPI가 외부 법령 API 없이 검색하는가
 - [x] 조문 검색 결과가 cited_articles 기준으로 나온다
-- [ ] 자연어 검색 결과가 evidence 문단을 포함한다
-- [ ] 비교 후보가 사실관계 유사도 중심으로 정렬된다
-- [ ] LLM 실패 시 fallback이 나온다
+- [x] 자연어 검색 결과가 evidence 문단을 포함한다
+- [x] 비교 후보가 사실관계 유사도 중심으로 정렬된다
+- [x] LLM 실패 시 fallback이 나온다
 
 ### 프론트 구현 후 테스트
 
-- [ ] 검색 시작에서 비교 결과까지 이동 가능하다
+- [x] 검색 시작에서 비교 결과까지 이동 가능하다
 - [ ] 기준 판례 선택 상태가 유지된다
-- [ ] 비교 후보 추천 이유가 보인다
+- [x] 비교 후보 추천 이유가 보인다
 - [ ] 모바일에서 비교 화면이 깨지지 않는다
-- [ ] 피드백을 제출할 수 있다
+- [x] 피드백을 제출할 수 있다
 
 ### MVP 완료 전 테스트
 
@@ -793,6 +813,52 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 
 현재 문서 기준 다음 작업 순서는 아래가 가장 좋다.
 
-1. 판례 상세 API를 구현한다.
-2. 조문 검색 UI에서 판례 상세 화면으로 이동하는 흐름을 구현한다.
-3. 자연어 intent parser 또는 embed 파이프라인으로 진행한다.
+1. `pipeline:embed`를 OpenAI provider로 소량 실행해 Supabase `case_embeddings` 적재를 검증한다.
+2. 자연어 검색/비교 후보의 embedding score 품질을 샘플 쿼리로 점검한다.
+3. 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 기록한다.
+4. 익명 세션/검색 로그/비교 로그는 운영·평가 단계로 보류한다.
+
+## 17. 로컬 임베딩 적재 테스트와 판례 수집 우선순위
+
+### 17.1 로컬 임베딩 적재 테스트 결과
+
+- 2026-06-04 기준 OpenAI 유료 API 대신 무료 로컬 모델 `dragonkue/multilingual-e5-small-ko`를 사용한다.
+- `sentence-transformers` 출력 384차원은 기존 DB 벡터 스키마 유지를 위해 768차원으로 padding한다.
+- `limit 10` 테스트: 판례 단위 6건, 문단 10건, 총 28개 임베딩 upsert 성공.
+- `limit 100` 테스트: 판례 단위 6건, 문단 100건, 총 118개 임베딩 upsert 성공.
+- `limit 1000` 테스트: 현재 DB에 존재하는 문단이 459개라 문단 459건까지 전체 임베딩 upsert 완료.
+- `pipeline_runs`에는 `stage=embed`, `status=succeeded`, `provider=sentence-transformers`, `model=dragonkue/multilingual-e5-small-ko`, `dimension=768`로 기록된다.
+
+### 17.2 다음 판례 적재 우선순위
+
+1. P0 손해배상 핵심 조문 인용 판례를 먼저 적재한다.
+   - 민법 제750조: 불법행위 손해배상 일반
+   - 민법 제751조: 위자료, 정신적 손해
+   - 민법 제763조: 불법행위 손해배상 준용
+   - 민법 제393조: 손해배상 범위
+   - 민법 제396조: 과실상계
+   - 민법 제399조: 손해배상자의 대위
+   - 민법 제766조: 손해배상청구권 소멸시효
+   - 자동차손해배상 보장법 제3조: 자동차 사고 손해배상 책임
+2. 검색/비교 품질을 빨리 검증하기 위해 교통사고 손해배상 판례를 최우선으로 모은다.
+   - 교통사고
+   - 무단횡단
+   - 전방주시의무
+   - 과실상계
+   - 운행자 책임
+   - 자동차손해배상
+3. 그 다음은 비교 후보 품질을 높이는 세부 유형을 확장한다.
+   - 사용자책임
+   - 공동불법행위
+   - 감독자 책임
+   - 손해배상 범위
+   - 인과관계
+   - 위자료
+4. 사건종류는 MVP에서 `민사`를 우선한다.
+5. 원문이 없거나 구조화가 어려운 판례, 손해배상 관련성이 약한 판례, outcome이 불명확한 판례는 저장하더라도 검색 노출 우선순위를 낮춘다.
+
+### 17.3 다음 실행 순서
+
+1. `collect_cases`로 P0 조문 + 교통사고/과실상계 키워드 중심 300~500건을 먼저 수집한다.
+2. `normalize -> split -> structure -> validate -> embed` 순서로 재처리한다.
+3. 적재 후 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 측정한다.

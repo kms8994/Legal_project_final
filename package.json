@@ -18,6 +18,7 @@
     "pipeline:split": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.split",
     "pipeline:extract": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.extract",
     "pipeline:validate": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.validate",
-    "pipeline:structure": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.structure"
+    "pipeline:structure": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.structure",
+    "pipeline:embed": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.embed"
   }
 }
