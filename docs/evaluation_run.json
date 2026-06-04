@@ -1,23 +1,25 @@
 {
-  "generated_at": "2026-06-05T02:57:06",
+  "generated_at": "2026-06-05T03:09:28",
   "statute": {
     "metric": {
       "query_count": 10,
       "failures": 3,
       "precision_at_10": 0.6,
+      "in_scope_precision_at_10": 0.75,
       "top1_exact_article_rate": 0.6,
-      "p95_latency_ms": 560.4
+      "p95_latency_ms": 321.9
     },
     "rows": [
       {
         "id": "S01",
         "query": "민법 제750조",
         "expected_ref": "민법_제750조",
+        "scope_status": "in_scope",
         "status": 200,
         "result_count": 10,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 560.4,
+        "latency_ms": 321.9,
         "top_results": [
           {
             "rank": 1,
@@ -90,11 +92,12 @@
         "id": "S02",
         "query": "민법 제751조",
         "expected_ref": "민법_제751조",
+        "scope_status": "in_scope",
         "status": 200,
         "result_count": 10,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 132.4,
+        "latency_ms": 93.7,
         "top_results": [
           {
             "rank": 1,
@@ -175,11 +178,12 @@
         "id": "S03",
         "query": "민법 제396조",
         "expected_ref": "민법_제396조",
+        "scope_status": "in_scope",
         "status": 200,
         "result_count": 1,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 95.5,
+        "latency_ms": 77.4,
         "top_results": [
           {
             "rank": 1,
@@ -201,11 +205,12 @@
         "id": "S04",
         "query": "민법 제393조",
         "expected_ref": "민법_제393조",
+        "scope_status": "in_scope",
         "status": 200,
         "result_count": 5,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 86.4,
+        "latency_ms": 81.2,
         "top_results": [
           {
             "rank": 1,
@@ -290,11 +295,12 @@
         "id": "S05",
         "query": "민법 제763조",
         "expected_ref": "민법_제763조",
+        "scope_status": "in_scope",
         "status": 200,
         "result_count": 5,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 83.5,
+        "latency_ms": 81.4,
         "top_results": [
           {
             "rank": 1,
@@ -385,11 +391,12 @@
         "id": "S06",
         "query": "민법 제766조",
         "expected_ref": "민법_제766조",
+        "scope_status": "in_scope",
         "status": 200,
         "result_count": 10,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 86.9,
+        "latency_ms": 84.2,
         "top_results": [
           {
             "rank": 1,
@@ -467,44 +474,48 @@
         "id": "S07",
         "query": "민법 제756조",
         "expected_ref": "민법_제756조",
+        "scope_status": "missing_scope",
         "status": 404,
         "result_count": 0,
         "precision_at_k": 0.0,
         "first_hit_rank": null,
-        "latency_ms": 53.5,
+        "latency_ms": 45.2,
         "top_results": []
       },
       {
         "id": "S08",
         "query": "민법 제760조",
         "expected_ref": "민법_제760조",
+        "scope_status": "missing_scope",
         "status": 404,
         "result_count": 0,
         "precision_at_k": 0.0,
         "first_hit_rank": null,
-        "latency_ms": 53.4,
+        "latency_ms": 45.2,
         "top_results": []
       },
       {
         "id": "S09",
         "query": "민법 750",
         "expected_ref": "민법_제750조",
+        "scope_status": "in_scope",
         "status": 400,
         "result_count": 0,
         "precision_at_k": 0.0,
         "first_hit_rank": null,
-        "latency_ms": 17.0,
+        "latency_ms": 13.3,
         "top_results": []
       },
       {
         "id": "S10",
         "query": "자동차손해배상 보장법 제3조",
         "expected_ref": "자동차손해배상_보장법_제3조",
+        "scope_status": "in_scope",
         "status": 200,
         "result_count": 4,
         "precision_at_k": 0.0,
         "first_hit_rank": null,
-        "latency_ms": 92.4,
+        "latency_ms": 81.1,
         "top_results": [
           {
             "rank": 1,
@@ -573,8 +584,8 @@
     "metric": {
       "query_count": 10,
       "failures": 0,
-      "avg_top5_relevant_count": 1.9,
-      "p95_latency_ms": 15185.4
+      "avg_top5_relevant_count": 2,
+      "p95_latency_ms": 16129.1
     },
     "rows": [
       {
@@ -593,7 +604,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 4,
-        "latency_ms": 15185.4,
+        "latency_ms": 16129.1,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -709,7 +720,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 4,
-        "latency_ms": 229.1,
+        "latency_ms": 246.4,
         "parsed_intent": {
           "case_type": null,
           "legal_domain": null,
@@ -816,8 +827,8 @@
         ],
         "status": 200,
         "result_count": 10,
-        "top5_relevant_count": 1,
-        "latency_ms": 243.8,
+        "top5_relevant_count": 2,
+        "latency_ms": 241.0,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -881,7 +892,7 @@
               "민법_제750조"
             ],
             "summary_card": "1. 피고들의 항소를 모두 기각한다. 2. 항소비용은 피고들이 부담한다. 2. 항소취지 제1심판결 중 피고들 각 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다.",
-            "heuristic_relevant": false
+            "heuristic_relevant": true
           },
           {
             "rank": 4,
@@ -929,7 +940,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 218.7,
+        "latency_ms": 242.6,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1039,7 +1050,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 4,
-        "latency_ms": 234.3,
+        "latency_ms": 244.3,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1151,7 +1162,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 225.6,
+        "latency_ms": 266.2,
         "parsed_intent": {
           "case_type": null,
           "legal_domain": null,
@@ -1262,7 +1273,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 225.7,
+        "latency_ms": 267.1,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1371,7 +1382,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 5,
-        "latency_ms": 243.2,
+        "latency_ms": 260.6,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1477,7 +1488,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 233.8,
+        "latency_ms": 265.0,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1586,7 +1597,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 1,
-        "latency_ms": 233.2,
+        "latency_ms": 264.9,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1689,15 +1700,15 @@
       "avg_material_fact_match": 0.7,
       "avg_facts_vector_similarity": 0.512,
       "avg_issue_similarity": 0.787,
-      "evidence_coverage_rate": 0.0,
-      "p95_latency_ms": 213.7
+      "evidence_coverage_rate": 1.0,
+      "p95_latency_ms": 249.8
     },
     "rows": [
       {
         "base_case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 211.6,
+        "latency_ms": 249.1,
         "base_case": {
           "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
           "case_no": "2024가단100001",
@@ -1726,7 +1737,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 2,
@@ -1738,7 +1749,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 0.2,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 3,
@@ -1750,7 +1761,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 0.333,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 4,
@@ -1762,7 +1773,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 0.333,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 5,
@@ -1774,7 +1785,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 0.333,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           }
         ]
       },
@@ -1782,7 +1793,7 @@
         "base_case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 212.7,
+        "latency_ms": 238.3,
         "base_case": {
           "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
           "case_no": "2019가단5248886",
@@ -1811,7 +1822,7 @@
             "material_fact_match": 0.9,
             "issue_similarity": 0.333,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 2,
@@ -1823,7 +1834,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 0.429,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 3,
@@ -1835,7 +1846,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 1.0,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 4,
@@ -1847,7 +1858,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 5,
@@ -1859,7 +1870,7 @@
             "material_fact_match": 0.8,
             "issue_similarity": 0.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           }
         ]
       },
@@ -1867,7 +1878,7 @@
         "base_case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 208.7,
+        "latency_ms": 249.8,
         "base_case": {
           "case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
           "case_no": "2020나62251",
@@ -1896,7 +1907,7 @@
             "material_fact_match": 0.8,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 2,
@@ -1908,7 +1919,7 @@
             "material_fact_match": 0.9,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 3,
@@ -1920,7 +1931,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 4,
@@ -1932,7 +1943,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 5,
@@ -1944,7 +1955,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           }
         ]
       },
@@ -1952,7 +1963,7 @@
         "base_case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 209.6,
+        "latency_ms": 240.3,
         "base_case": {
           "case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
           "case_no": "2023나100002",
@@ -1981,7 +1992,7 @@
             "material_fact_match": 0.9,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 2,
@@ -1993,7 +2004,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 3,
@@ -2005,7 +2016,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 4,
@@ -2017,7 +2028,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 5,
@@ -2029,7 +2040,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           }
         ]
       },
@@ -2037,7 +2048,7 @@
         "base_case_id": "d95a8e66-380b-480e-b437-5ad441d6c609",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 213.7,
+        "latency_ms": 233.1,
         "base_case": {
           "case_id": "d95a8e66-380b-480e-b437-5ad441d6c609",
           "case_no": "2017나2055054",
@@ -2066,7 +2077,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 2,
@@ -2078,7 +2089,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 3,
@@ -2090,7 +2101,7 @@
             "material_fact_match": 0.5,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 4,
@@ -2102,7 +2113,7 @@
             "material_fact_match": 0.5,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 5,
@@ -2114,7 +2125,7 @@
             "material_fact_match": 0.5,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           }
         ]
       },
@@ -2122,7 +2133,7 @@
         "base_case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 209.5,
+        "latency_ms": 238.2,
         "base_case": {
           "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
           "case_no": "2020나60108",
@@ -2151,7 +2162,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 0.6,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 2,
@@ -2163,7 +2174,7 @@
             "material_fact_match": 0.9,
             "issue_similarity": 0.6,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 3,
@@ -2175,7 +2186,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 0.6,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 4,
@@ -2187,7 +2198,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 0.2,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 5,
@@ -2199,7 +2210,7 @@
             "material_fact_match": 0.6,
             "issue_similarity": 0.6,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           }
         ]
       },
@@ -2207,7 +2218,7 @@
         "base_case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 212.9,
+        "latency_ms": 233.9,
         "base_case": {
           "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
           "case_no": "2024다239364",
@@ -2236,7 +2247,7 @@
             "material_fact_match": 0.9,
             "issue_similarity": 1.0,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 2,
@@ -2248,7 +2259,7 @@
             "material_fact_match": 0.8,
             "issue_similarity": 1.0,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 3,
@@ -2260,7 +2271,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 4,
@@ -2272,7 +2283,7 @@
             "material_fact_match": 0.8,
             "issue_similarity": 1.0,
             "outcome_difference": 0.0,
-            "evidence_count": 0
+            "evidence_count": 5
           },
           {
             "rank": 5,
@@ -2284,7 +2295,7 @@
             "material_fact_match": 0.7,
             "issue_similarity": 1.0,
             "outcome_difference": 1.0,
-            "evidence_count": 0
+            "evidence_count": 5
           }
         ]
       }

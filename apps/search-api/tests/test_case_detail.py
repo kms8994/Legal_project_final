@@ -143,7 +143,7 @@ class FakeCaseDetailRepository:
                 outcome={"disposition": "partially accepted", "key_factor": "victim fault"},
                 cited_articles=["civil_act_750"],
                 facets={"legal_domain": "damages"},
-                evidence_spans={"facts": ["p08"], "reasoning": ["p17"]},
+                evidence_spans={"facts": [{"paragraph_id": "P001"}], "reasoning": [{"paragraph_id": "P0017"}]},
                 confidence_score=0.84,
             ),
             CompareCandidateRecord(
@@ -299,7 +299,7 @@ def test_get_compare_candidates_returns_ranked_candidates() -> None:
     assert body["candidates"][0]["case_no"] == "2020Da4321"
     assert body["candidates"][0]["scores"]["final_score"] > body["candidates"][1]["scores"]["final_score"]
     assert body["candidates"][0]["common_facts"] == ["negligence_offset_issue: True"]
-    assert body["candidates"][0]["evidence_ids"] == ["p08", "p17"]
+    assert body["candidates"][0]["evidence_ids"] == ["P0001", "P0017"]
 
 
 def test_get_compare_candidates_returns_404_for_unknown_case() -> None:

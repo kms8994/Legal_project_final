@@ -52,7 +52,7 @@ class FakeStatuteRepository:
                 facts="전방주시 의무 위반이 문제된 사안입니다.",
                 conclusion="원고의 청구를 일부 인용했습니다.",
                 outcome={"disposition": "일부 인용", "direction": "원고 일부 유리"},
-                evidence_spans={"facts": ["p12"], "reasoning": ["p18"]},
+                evidence_spans={"facts": [{"paragraph_id": "P001"}], "reasoning": ["p18"]},
                 review_status="pending",
                 confidence_score=0.82,
             )
@@ -115,6 +115,13 @@ class FakeStatuteRepository:
             "11111111-1111-1111-1111-111111111111": [
                 SearchEvidenceRecord(
                     case_id="11111111-1111-1111-1111-111111111111",
+                    evidence_id="P0001",
+                    section_type="facts",
+                    paragraph_order=12,
+                    text="Driver negligence evidence paragraph.",
+                ),
+                SearchEvidenceRecord(
+                    case_id="11111111-1111-1111-1111-111111111111",
                     evidence_id="p12",
                     section_type="facts",
                     paragraph_order=12,
@@ -170,8 +177,8 @@ def test_search_statute_returns_contract_shape() -> None:
     assert body["query"]["article_validated"] is True
     assert body["pagination"]["total"] == 1
     assert body["results"][0]["case_no"] == "2021다12345"
-    assert body["results"][0]["evidence_ids"] == ["p12", "p18"]
-    assert body["results"][0]["evidence_snippets"][0]["evidence_id"] == "p12"
+    assert body["results"][0]["evidence_ids"] == ["P0001", "p18"]
+    assert body["results"][0]["evidence_snippets"][0]["evidence_id"] == "P0001"
     assert body["results"][0]["evidence_snippets"][0]["text"] == "Driver negligence evidence paragraph."
 
 

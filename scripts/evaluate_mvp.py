@@ -30,6 +30,7 @@ class StatuteEvalCase:
     query: str
     expected_ref: str
     intent: str
+    scope_status: str = "in_scope"
 
 
 @dataclass(frozen=True)
@@ -48,8 +49,8 @@ STATUTE_CASES = [
     StatuteEvalCase("S04", "민법 제393조", "민법_제393조", "손해배상 범위"),
     StatuteEvalCase("S05", "민법 제763조", "민법_제763조", "불법행위 손해배상 준용"),
     StatuteEvalCase("S06", "민법 제766조", "민법_제766조", "손해배상청구권 소멸시효"),
-    StatuteEvalCase("S07", "민법 제756조", "민법_제756조", "사용자책임"),
-    StatuteEvalCase("S08", "민법 제760조", "민법_제760조", "공동불법행위"),
+    StatuteEvalCase("S07", "민법 제756조", "민법_제756조", "사용자책임", "missing_scope"),
+    StatuteEvalCase("S08", "민법 제760조", "민법_제760조", "공동불법행위", "missing_scope"),
     StatuteEvalCase("S09", "민법 750", "민법_제750조", "약식 조문 입력 정규화"),
     StatuteEvalCase("S10", "자동차손해배상 보장법 제3조", "자동차손해배상_보장법_제3조", "자동차 사고 손해배상 책임"),
 ]
@@ -176,6 +177,7 @@ def evaluate_statute(client: TestClient, size: int) -> dict[str, Any]:
     rows = []
     latencies = []
     precisions = []
+    in_scope_precisions = []
     top1_hits = 0
     failures = 0
 
@@ -194,6 +196,8 @@ def evaluate_statute(client: TestClient, size: int) -> dict[str, Any]:
         ]
         precision = len(hits) / len(results) if results else 0.0
         precisions.append(precision)
+        if case.scope_status == "in_scope":
+            in_scope_precisions.append(precision)
         if hits and hits[0] == 1:
             top1_hits += 1
         if status != 200:
@@ -203,6 +207,7 @@ def evaluate_statute(client: TestClient, size: int) -> dict[str, Any]:
                 "id": case.eval_id,
                 "query": case.query,
                 "expected_ref": case.expected_ref,
+                "scope_status": case.scope_status,
                 "status": status,
                 "result_count": len(results),
                 "precision_at_k": round(precision, 3),
@@ -217,6 +222,9 @@ def evaluate_statute(client: TestClient, size: int) -> dict[str, Any]:
             "query_count": len(STATUTE_CASES),
             "failures": failures,
             "precision_at_10": round(statistics.mean(precisions), 3) if precisions else 0.0,
+            "in_scope_precision_at_10": round(statistics.mean(in_scope_precisions), 3)
+            if in_scope_precisions
+            else 0.0,
             "top1_exact_article_rate": round(top1_hits / len(STATUTE_CASES), 3),
             "p95_latency_ms": percentile(latencies, 95),
         },
@@ -444,6 +452,7 @@ def markdown_report(report: dict[str, Any]) -> str:
         "| Area | Metric | Value |",
         "|------|--------|-------|",
         f"| Statute search | precision@10 | {statute['precision_at_10']} |",
+        f"| Statute search | in-scope precision@10 | {statute['in_scope_precision_at_10']} |",
         f"| Statute search | top1 exact article rate | {statute['top1_exact_article_rate']} |",
         f"| Natural search | avg Top-5 relevant count | {natural['avg_top5_relevant_count']} |",
         f"| Compare candidates | avg material fact match | {compare['avg_material_fact_match']} |",
@@ -460,16 +469,17 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "## Statute Search",
         "",
-        "| ID | Query | Expected | Status | P@10 | First Hit | Top Result |",
-        "|----|-------|----------|--------|------|-----------|------------|",
+        "| ID | Query | Expected | Scope | Status | P@10 | First Hit | Top Result |",
+        "|----|-------|----------|-------|--------|------|-----------|------------|",
     ]
     for row in report["statute"]["rows"]:
         top = row["top_results"][0] if row["top_results"] else {}
         lines.append(
-            "| {id} | {query} | {expected_ref} | {status} | {precision_at_k} | {first_hit_rank} | {top} |".format(
+            "| {id} | {query} | {expected_ref} | {scope_status} | {status} | {precision_at_k} | {first_hit_rank} | {top} |".format(
                 id=row["id"],
                 query=row["query"],
                 expected_ref=row["expected_ref"],
+                scope_status=row["scope_status"],
                 status=row["status"],
                 precision_at_k=row["precision_at_k"],
                 first_hit_rank=row["first_hit_rank"],
@@ -567,6 +577,7 @@ def main() -> int:
         "markdown_output": str(md_path),
         "summary": {
             "statute_precision_at_10": report["statute"]["metric"]["precision_at_10"],
+            "statute_in_scope_precision_at_10": report["statute"]["metric"]["in_scope_precision_at_10"],
             "natural_avg_top5_relevant_count": report["natural"]["metric"]["avg_top5_relevant_count"],
             "compare_avg_material_fact_match": report["compare"]["metric"]["avg_material_fact_match"],
             "needs_review_rate": report["db_snapshot"]["needs_review_rate"],

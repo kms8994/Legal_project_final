@@ -644,9 +644,29 @@ def _outcome_summary(left: dict[str, Any], right: dict[str, Any]) -> str:
 def _evidence_ids(evidence_spans: dict[str, Any]) -> list[str]:
     ids: list[str] = []
     for value in evidence_spans.values():
-        if isinstance(value, list):
-            ids.extend(item for item in value if isinstance(item, str))
+        ids.extend(_extract_evidence_ids(value))
     return ids[:5]
+
+
+def _extract_evidence_ids(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [_normalize_evidence_id(value)]
+    if isinstance(value, list):
+        ids: list[str] = []
+        for item in value:
+            ids.extend(_extract_evidence_ids(item))
+        return ids
+    if isinstance(value, dict):
+        paragraph_id = value.get("paragraph_id")
+        if isinstance(paragraph_id, str):
+            return [_normalize_evidence_id(paragraph_id)]
+    return []
+
+
+def _normalize_evidence_id(value: str) -> str:
+    if len(value) == 4 and value.startswith("P") and value[1:].isdigit():
+        return f"P{int(value[1:]):04d}"
+    return value
 
 
 def _evidence_links(paragraphs: list[Any], evidence_ids: list[str]) -> list[EvidenceLink]:

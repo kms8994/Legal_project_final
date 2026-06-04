@@ -813,10 +813,12 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 
 현재 문서 기준 다음 작업 순서는 아래가 가장 좋다.
 
-1. 조문 검색 precision@10, 자연어 검색 Top-5 관련 판례 수, 비교 후보 material fact match를 기록한다.
-2. 자연어 검색/비교 후보의 embedding score 품질을 샘플 쿼리로 점검한다.
-3. needs_review 비율이 높은 원인을 확인하고 structure rule fallback을 보강한다.
-4. 익명 세션/검색 로그/비교 로그는 운영·평가 단계로 보류한다.
+1. DB 확장으로 해결될 실패와 현재 로직 결함을 평가에서 분리한다.
+2. 비교 후보 `evidence_ids`/근거 문단 연결을 먼저 고친다.
+3. `민법 750`, `자배법 제3조` 같은 약식/alias 정규화 결함을 보강한다.
+4. needs_review 샘플 20건을 확인하고 structure rule fallback을 보강한다.
+5. 자연어 검색/비교 후보의 embedding score 품질을 샘플 쿼리로 점검한다.
+6. 익명 세션/검색 로그/비교 로그는 운영·평가 단계로 보류한다.
 
 ## 17. 로컬 임베딩 적재 테스트와 판례 수집 우선순위
 
@@ -890,3 +892,34 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
   - `자동차손해배상 보장법 제3조`는 검색은 200이지만 기대 normalized ref와 결과 cited article이 맞지 않아 P@10이 0으로 측정된다.
   - 자연어 검색은 `사용자책임`, `공동불법행위`, `소멸시효`, `손해배상 범위` 쿼리에서 Top-5 관련도가 낮다.
   - 비교 후보 API는 후보를 반환하지만 candidate `evidence_ids`가 비어 있어 evidence coverage가 0으로 측정된다.
+
+### 17.6 DB 확장 전 우선순위 재정의
+
+- 2026-06-05 기준, 데이터 수집 범위 확대는 잠시 보류한다.
+- `민법 제756조`, `민법 제760조`처럼 현재 수집/조문 범위 밖이라 실패하는 항목은 `missing_scope` 또는 `needs_future_data`로 분류한다.
+- 전체 평가 지표와 현재 DB 범위 안에서의 in-scope 지표를 분리한다. 이렇게 해야 데이터 부족과 로직 결함을 혼동하지 않는다.
+- 지금 먼저 고칠 항목은 데이터가 늘어나도 자동으로 해결되지 않는 문제다.
+  - 비교 후보 `evidence_ids`가 비어 있는 문제
+  - 약식 조문 입력과 법령 alias 정규화 문제
+  - 자동차손해배상 보장법 normalized ref 불일치
+  - needs_review 원인 분류와 구조화 fallback 보강
+- 자연어 검색 지표는 조문 정규화, evidence 연결, 구조화 품질을 먼저 개선한 뒤 다시 판단한다.
+
+### 17.7 DB 확장 보류 후 1차 개선 결과
+
+- 비교 후보 `evidence_ids` 추출 로직을 보강했다.
+  - 기존에는 `evidence_spans` 값이 문자열 리스트일 때만 처리했다.
+  - 실제 DB에는 `{ "paragraph_id": "P0010", ... }` 형태의 evidence span도 있어 이를 함께 처리하도록 했다.
+  - `P001` 같은 3자리 paragraph id는 `P0001`로 정규화해 `case_paragraphs.paragraph_id`와 맞춘다.
+- `npm.cmd run eval:mvp` 재실행 결과:
+  - 조문 검색 전체 `precision@10=0.60`.
+  - `missing_scope`를 제외한 in-scope 조문 검색 `precision@10=0.75`.
+  - 자연어 검색 `avg_top5_relevant_count=2.0`.
+  - 비교 후보 `avg_material_fact_match=0.70`.
+  - 비교 후보 `evidence_coverage_rate=1.0`.
+  - 구조화 검증 `needs_review_rate=0.77`.
+- 해석:
+  - 전체 조문 지표가 낮은 이유 중 일부는 DB 범위 부족이다.
+  - 현재 범위 안의 조문 검색은 경고 기준 0.70을 넘었지만, `민법 750` 약식 입력과 자동차손배법 ref 정규화는 여전히 로직 개선 대상이다.
+  - evidence coverage 0 문제는 서비스 계층 추출 로직 문제였고, DB 확장 없이 해결됐다.
+  - 다음 우선순위는 약식/alias 조문 정규화와 needs_review 원인 샘플링이다.

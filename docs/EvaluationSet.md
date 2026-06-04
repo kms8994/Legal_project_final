@@ -19,20 +19,22 @@ Generated outputs:
 Metric:
 
 - `precision@10`: result is relevant when `expected_ref` is present in `cited_articles`.
+- `in-scope precision@10`: same metric, but excludes rows marked `missing_scope`.
 - `top1 exact article rate`: first result cites the expected article.
+- `scope_status`: `in_scope` means the current DB should support the query; `missing_scope` means it is useful for future expansion but should not be treated as a current logic failure.
 
-| ID | Query | Expected Ref | Intent |
-|----|-------|--------------|--------|
-| S01 | 민법 제750조 | 민법_제750조 | 불법행위 손해배상 일반 |
-| S02 | 민법 제751조 | 민법_제751조 | 위자료 및 정신적 손해 |
-| S03 | 민법 제396조 | 민법_제396조 | 과실상계 |
-| S04 | 민법 제393조 | 민법_제393조 | 손해배상 범위 |
-| S05 | 민법 제763조 | 민법_제763조 | 불법행위 손해배상 준용 |
-| S06 | 민법 제766조 | 민법_제766조 | 손해배상청구권 소멸시효 |
-| S07 | 민법 제756조 | 민법_제756조 | 사용자책임 |
-| S08 | 민법 제760조 | 민법_제760조 | 공동불법행위 |
-| S09 | 민법 750 | 민법_제750조 | 약식 조문 입력 정규화 |
-| S10 | 자동차손해배상 보장법 제3조 | 자동차손해배상_보장법_제3조 | 자동차 사고 손해배상 책임 |
+| ID | Query | Expected Ref | Scope | Intent |
+|----|-------|--------------|-------|--------|
+| S01 | 민법 제750조 | 민법_제750조 | in_scope | 불법행위 손해배상 일반 |
+| S02 | 민법 제751조 | 민법_제751조 | in_scope | 위자료 및 정신적 손해 |
+| S03 | 민법 제396조 | 민법_제396조 | in_scope | 과실상계 |
+| S04 | 민법 제393조 | 민법_제393조 | in_scope | 손해배상 범위 |
+| S05 | 민법 제763조 | 민법_제763조 | in_scope | 불법행위 손해배상 준용 |
+| S06 | 민법 제766조 | 민법_제766조 | in_scope | 손해배상청구권 소멸시효 |
+| S07 | 민법 제756조 | 민법_제756조 | missing_scope | 사용자책임 |
+| S08 | 민법 제760조 | 민법_제760조 | missing_scope | 공동불법행위 |
+| S09 | 민법 750 | 민법_제750조 | in_scope | 약식 조문 입력 정규화 |
+| S10 | 자동차손해배상 보장법 제3조 | 자동차손해배상_보장법_제3조 | in_scope | 자동차 사고 손해배상 책임 |
 
 ## 3. Natural Search Set
 
