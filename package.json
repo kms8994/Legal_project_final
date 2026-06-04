@@ -1,0 +1,23 @@
+{
+  "name": "caselens",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "web:dev": "npm --workspace apps/web run dev",
+    "web:build": "npm --workspace apps/web run build",
+    "web:lint": "npm --workspace apps/web run lint",
+    "api:dev": "apps\\search-api\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --app-dir apps/search-api",
+    "api:test": "apps\\search-api\\.venv\\Scripts\\python.exe -m pytest apps/search-api/tests",
+    "api:health": "apps\\search-api\\.venv\\Scripts\\python.exe -c \"import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').read().decode())\"",
+    "collect:laws": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.collect_laws",
+    "collect:cases": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.collect_cases",
+    "pipeline:normalize": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.normalize",
+    "pipeline:split": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.split",
+    "pipeline:extract": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.extract",
+    "pipeline:validate": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.validate",
+    "pipeline:structure": "apps\\search-api\\.venv\\Scripts\\python.exe -m pipelines.structure"
+  }
+}

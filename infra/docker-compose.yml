@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: caselens-postgres
+    environment:
+      POSTGRES_DB: caselens
+      POSTGRES_USER: caselens
+      POSTGRES_PASSWORD: caselens
+    ports:
+      - "5432:5432"
+    volumes:
+      - caselens_postgres_data:/var/lib/postgresql/data
+      - ../db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caselens -d caselens"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  caselens_postgres_data:
