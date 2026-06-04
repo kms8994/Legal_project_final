@@ -182,6 +182,24 @@ def test_search_statute_returns_contract_shape() -> None:
     assert body["results"][0]["evidence_snippets"][0]["text"] == "Driver negligence evidence paragraph."
 
 
+def test_search_statute_accepts_short_article_query() -> None:
+    app.dependency_overrides[get_statute_search_service] = override_statute_search_service
+    client = TestClient(app)
+
+    try:
+        response = client.post(
+            "/api/v1/search/statute",
+            json={"query": "민법 750", "page": 1, "size": 20, "sort": "relevance"},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["query"]["normalized_ref"] == "민법_제750조"
+    assert body["results"][0]["case_no"] == "2021다12345"
+
+
 def test_search_statute_returns_404_for_unknown_internal_article() -> None:
     app.dependency_overrides[get_statute_search_service] = override_statute_search_service
     client = TestClient(app)

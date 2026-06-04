@@ -1,15 +1,15 @@
 # MVP Evaluation Run
 
-- Generated at: `2026-06-05T03:09:28`
+- Generated at: `2026-06-05T03:31:58`
 - Labeling mode: heuristic first pass. Use top results below for manual confirmation.
 
 ## Summary
 
 | Area | Metric | Value |
 |------|--------|-------|
-| Statute search | precision@10 | 0.6 |
-| Statute search | in-scope precision@10 | 0.75 |
-| Statute search | top1 exact article rate | 0.6 |
+| Statute search | precision@10 | 0.8 |
+| Statute search | in-scope precision@10 | 1.0 |
+| Statute search | top1 exact article rate | 0.8 |
 | Natural search | avg Top-5 relevant count | 2 |
 | Compare candidates | avg material fact match | 0.7 |
 | Compare candidates | evidence coverage rate | 1.0 |
@@ -35,8 +35,8 @@
 | S06 | 민법 제766조 | 민법_제766조 | in_scope | 200 | 1.0 | 1 | 2021다213477 |
 | S07 | 민법 제756조 | 민법_제756조 | missing_scope | 404 | 0.0 | None |  |
 | S08 | 민법 제760조 | 민법_제760조 | missing_scope | 404 | 0.0 | None |  |
-| S09 | 민법 750 | 민법_제750조 | in_scope | 400 | 0.0 | None |  |
-| S10 | 자동차손해배상 보장법 제3조 | 자동차손해배상_보장법_제3조 | in_scope | 200 | 0.0 | None | 2019가단5248886 |
+| S09 | 민법 750 | 민법_제750조 | in_scope | 200 | 1.0 | 1 | 2025나10683 |
+| S10 | 자동차손해배상 보장법 제3조 | 자동차손해배상 보장법_제3조 | in_scope | 200 | 1.0 | 1 | 2019가단5248886 |
 
 ## Natural Search
 

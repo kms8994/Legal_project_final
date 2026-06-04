@@ -5,13 +5,11 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from pipelines.common.articles import LAW_ALIASES, make_normalized_ref, normalize_law_name
+
 
 DEFAULT_LAW_ALIASES = {
-    "민법": "민법",
-    "자동차손해배상 보장법": "자동차손해배상 보장법",
-    "자동차손해배상보장법": "자동차손해배상 보장법",
-    "자배법": "자동차손해배상 보장법",
-    "자동차손배법": "자동차손해배상 보장법",
+    **LAW_ALIASES,
 }
 
 DEFAULT_KNOWN_ARTICLES = {
@@ -89,8 +87,8 @@ def extract_cited_articles(
     known_articles: set[str],
 ) -> list[dict[str, Any]]:
     pattern = re.compile(
-        r"(?:(민법|자동차손해배상\s*보장법|자동차손해배상보장법|자배법|자동차손배법)\s*)?"
-        r"제\s*(\d+)\s*조(?:의\s*(\d+))?"
+        r"(?:(민법|민\s*법|자동차손해배상\s*보장법|자동차손해배상보장법|자동차손해배상법|자배법|자동차손배법)\s*)?"
+        r"(?:제\s*)?(\d+)\s*조?(?:\s*의\s*(\d+))?"
     )
     found: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -98,10 +96,16 @@ def extract_cited_articles(
     for match in pattern.finditer(text):
         alias, article_no, branch_no = match.groups()
         if alias:
-            last_law_name = law_aliases.get(re.sub(r"\s+", " ", alias.strip()), alias.strip())
-        law_name = last_law_name
-        branch = f"의{int(branch_no)}" if branch_no else ""
-        normalized_ref = f"{law_name}_제{int(article_no)}조{branch}"
+            last_law_name = law_aliases.get(
+                re.sub(r"\s+", " ", alias.strip()),
+                normalize_law_name(alias),
+            )
+        law_name = normalize_law_name(last_law_name)
+        normalized_ref = make_normalized_ref(
+            law_name,
+            int(article_no),
+            int(branch_no) if branch_no else None,
+        )
         if normalized_ref not in known_articles and alias is None:
             continue
         if normalized_ref in seen:

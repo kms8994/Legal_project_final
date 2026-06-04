@@ -13,6 +13,27 @@ def test_parse_article_ref_normalizes_common_statute_query() -> None:
     assert parsed.normalized_ref == "민법_제750조"
 
 
+@pytest.mark.parametrize(
+    ("query", "normalized_ref"),
+    [
+        ("민법 750", "민법_제750조"),
+        ("민법 제750", "민법_제750조"),
+        ("민법750조", "민법_제750조"),
+        ("민 법 750", "민법_제750조"),
+        ("자배법 제3조", "자동차손해배상 보장법_제3조"),
+        ("자동차손배법 3", "자동차손해배상 보장법_제3조"),
+        ("자동차손해배상보장법 제3", "자동차손해배상 보장법_제3조"),
+    ],
+)
+def test_parse_article_ref_accepts_flexible_user_input(
+    query: str,
+    normalized_ref: str,
+) -> None:
+    parsed = parse_article_ref(query)
+
+    assert parsed.normalized_ref == normalized_ref
+
+
 def test_parse_article_ref_rejects_free_text() -> None:
     with pytest.raises(ArticleParseError):
         parse_article_ref("교통사고 손해배상")

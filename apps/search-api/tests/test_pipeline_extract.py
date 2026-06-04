@@ -31,3 +31,12 @@ def test_extract_case_features_skips_unknown_bare_articles() -> None:
 
     refs = [article["normalized_ref"] for article in extracted.cited_articles]
     assert refs == ["민법_제751조"]
+
+
+def test_extract_case_features_uses_shared_law_alias_normalization() -> None:
+    text = "자배법 제3조와 자동차손배법 3조는 자동차 사고 손해배상 책임의 근거로 언급되었다."
+
+    extracted = extract_case_features(text)
+
+    refs = [article["normalized_ref"] for article in extracted.cited_articles]
+    assert refs == ["자동차손해배상 보장법_제3조"]

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from pipelines.common.env import ROOT, get_required_env, load_dotenv
+from pipelines.common.articles import make_normalized_ref, normalize_law_name
 from pipelines.common.law_api import (
     LawApiClient,
     exact_match_item,
@@ -32,13 +33,12 @@ class StatuteRef:
 
     @property
     def normalized_ref(self) -> str:
-        branch = f"의{self.article_branch_no}" if self.article_branch_no else ""
-        return f"{self.law_name}_제{self.article_no}조{branch}"
+        return make_normalized_ref(self.law_name, self.article_no, self.article_branch_no)
 
     @property
     def display_ref(self) -> str:
         branch = f"의{self.article_branch_no}" if self.article_branch_no else ""
-        return f"{self.law_name} 제{self.article_no}조{branch}"
+        return f"{normalize_law_name(self.law_name)} 제{self.article_no}조{branch}"
 
 
 @dataclass(frozen=True)
@@ -96,7 +96,7 @@ def parse_statute_ref(priority: str, raw_ref: str) -> StatuteRef | None:
     law_name, article_no, article_branch_no = match.groups()
     return StatuteRef(
         priority=priority,
-        law_name=law_name,
+        law_name=normalize_law_name(law_name),
         article_no=int(article_no),
         article_branch_no=int(article_branch_no) if article_branch_no else None,
     )

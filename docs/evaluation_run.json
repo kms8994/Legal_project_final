@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-06-05T03:09:28",
+  "generated_at": "2026-06-05T03:31:58",
   "statute": {
     "metric": {
       "query_count": 10,
-      "failures": 3,
-      "precision_at_10": 0.6,
-      "in_scope_precision_at_10": 0.75,
-      "top1_exact_article_rate": 0.6,
-      "p95_latency_ms": 321.9
+      "failures": 2,
+      "precision_at_10": 0.8,
+      "in_scope_precision_at_10": 1.0,
+      "top1_exact_article_rate": 0.8,
+      "p95_latency_ms": 636.3
     },
     "rows": [
       {
@@ -19,7 +19,7 @@
         "result_count": 10,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 321.9,
+        "latency_ms": 636.3,
         "top_results": [
           {
             "rank": 1,
@@ -97,7 +97,7 @@
         "result_count": 10,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 93.7,
+        "latency_ms": 88.7,
         "top_results": [
           {
             "rank": 1,
@@ -183,7 +183,7 @@
         "result_count": 1,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 77.4,
+        "latency_ms": 75.3,
         "top_results": [
           {
             "rank": 1,
@@ -210,7 +210,7 @@
         "result_count": 5,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 81.2,
+        "latency_ms": 83.5,
         "top_results": [
           {
             "rank": 1,
@@ -300,7 +300,7 @@
         "result_count": 5,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 81.4,
+        "latency_ms": 79.0,
         "top_results": [
           {
             "rank": 1,
@@ -396,7 +396,7 @@
         "result_count": 10,
         "precision_at_k": 1.0,
         "first_hit_rank": 1,
-        "latency_ms": 84.2,
+        "latency_ms": 82.8,
         "top_results": [
           {
             "rank": 1,
@@ -479,7 +479,7 @@
         "result_count": 0,
         "precision_at_k": 0.0,
         "first_hit_rank": null,
-        "latency_ms": 45.2,
+        "latency_ms": 42.6,
         "top_results": []
       },
       {
@@ -491,7 +491,7 @@
         "result_count": 0,
         "precision_at_k": 0.0,
         "first_hit_rank": null,
-        "latency_ms": 45.2,
+        "latency_ms": 42.9,
         "top_results": []
       },
       {
@@ -499,23 +499,89 @@
         "query": "민법 750",
         "expected_ref": "민법_제750조",
         "scope_status": "in_scope",
-        "status": 400,
-        "result_count": 0,
-        "precision_at_k": 0.0,
-        "first_hit_rank": null,
-        "latency_ms": 13.3,
-        "top_results": []
+        "status": 200,
+        "result_count": 10,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 80.7,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "9761b407-1754-4469-8731-1bd00c760d01",
+            "case_no": "2025나10683",
+            "case_name": "채무부존재확인",
+            "decision_date": "2025-11-18",
+            "score": 0.95,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 제1심판결 중 피고 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다. 2. 소송 총비용은 원고가 부담한다. 2. 항소취지 주문과 같다."
+          },
+          {
+            "rank": 2,
+            "case_id": "5efaf9c9-da9e-4c2d-a1c9-98ee8c0d6bbb",
+            "case_no": "2024나41282",
+            "case_name": "손해배상(기)",
+            "decision_date": "2025-07-10",
+            "score": 0.94,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다. 9. ‘원고는 소외 1에게 이 사건 이혼소송 사건의 확정판결 주문에 기한 의무의 이행으로 소외 2를 인도하라.’는 내용의 이행명령 결정(2020즈..."
+          },
+          {
+            "rank": 3,
+            "case_id": "766dadd3-3793-41ff-a0c9-715ae7813d19",
+            "case_no": "2024다215375, 215382",
+            "case_name": "손해배상(기)등·손해배상(기)[해외 파생상품시장거래에서 투자중개업자의 장중 반대매매를 정한 약관 조항의 효력과 적용 범위 및 투자중개업자의 선관주의의무 위반 여부 등이 문제된 사건]",
+            "decision_date": "2025-03-13",
+            "score": 0.9299999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결의 본소 중 미수금 청구 부분 및 반소에 관한 부분을 파기하고, 이 부분 사건을 서울고등법원에 환송한다."
+          },
+          {
+            "rank": 4,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "decision_date": "2024-07-11",
+            "score": 0.9199999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결을 파기하고, 사건을 제주지방법원에 환송한다."
+          },
+          {
+            "rank": 5,
+            "case_id": "f8a13961-2758-48e2-a140-5c8d2459fb23",
+            "case_no": "2023나43126",
+            "case_name": "부당이득반환청구의소",
+            "decision_date": "2024-06-14",
+            "score": 0.9099999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다."
+          }
+        ]
       },
       {
         "id": "S10",
         "query": "자동차손해배상 보장법 제3조",
-        "expected_ref": "자동차손해배상_보장법_제3조",
+        "expected_ref": "자동차손해배상 보장법_제3조",
         "scope_status": "in_scope",
         "status": 200,
         "result_count": 4,
-        "precision_at_k": 0.0,
-        "first_hit_rank": null,
-        "latency_ms": 81.1,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 85.0,
         "top_results": [
           {
             "rank": 1,
@@ -585,7 +651,7 @@
       "query_count": 10,
       "failures": 0,
       "avg_top5_relevant_count": 2,
-      "p95_latency_ms": 16129.1
+      "p95_latency_ms": 15373.2
     },
     "rows": [
       {
@@ -604,7 +670,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 4,
-        "latency_ms": 16129.1,
+        "latency_ms": 15373.2,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -720,7 +786,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 4,
-        "latency_ms": 246.4,
+        "latency_ms": 209.7,
         "parsed_intent": {
           "case_type": null,
           "legal_domain": null,
@@ -823,12 +889,12 @@
           "손해배상"
         ],
         "expected_articles": [
-          "자동차손해배상_보장법_제3조"
+          "자동차손해배상 보장법_제3조"
         ],
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 2,
-        "latency_ms": 241.0,
+        "latency_ms": 219.0,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -940,7 +1006,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 242.6,
+        "latency_ms": 232.3,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1050,7 +1116,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 4,
-        "latency_ms": 244.3,
+        "latency_ms": 226.9,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1162,7 +1228,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 266.2,
+        "latency_ms": 233.0,
         "parsed_intent": {
           "case_type": null,
           "legal_domain": null,
@@ -1273,7 +1339,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 267.1,
+        "latency_ms": 222.0,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1382,7 +1448,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 5,
-        "latency_ms": 260.6,
+        "latency_ms": 228.7,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1488,7 +1554,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 0,
-        "latency_ms": 265.0,
+        "latency_ms": 220.6,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1597,7 +1663,7 @@
         "status": 200,
         "result_count": 10,
         "top5_relevant_count": 1,
-        "latency_ms": 264.9,
+        "latency_ms": 207.6,
         "parsed_intent": {
           "case_type": "civil",
           "legal_domain": "damages",
@@ -1701,14 +1767,14 @@
       "avg_facts_vector_similarity": 0.512,
       "avg_issue_similarity": 0.787,
       "evidence_coverage_rate": 1.0,
-      "p95_latency_ms": 249.8
+      "p95_latency_ms": 209.8
     },
     "rows": [
       {
         "base_case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 249.1,
+        "latency_ms": 209.8,
         "base_case": {
           "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
           "case_no": "2024가단100001",
@@ -1793,7 +1859,7 @@
         "base_case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 238.3,
+        "latency_ms": 208.0,
         "base_case": {
           "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
           "case_no": "2019가단5248886",
@@ -1878,7 +1944,7 @@
         "base_case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 249.8,
+        "latency_ms": 207.7,
         "base_case": {
           "case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
           "case_no": "2020나62251",
@@ -1963,7 +2029,7 @@
         "base_case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 240.3,
+        "latency_ms": 203.0,
         "base_case": {
           "case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
           "case_no": "2023나100002",
@@ -2048,7 +2114,7 @@
         "base_case_id": "d95a8e66-380b-480e-b437-5ad441d6c609",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 233.1,
+        "latency_ms": 202.7,
         "base_case": {
           "case_id": "d95a8e66-380b-480e-b437-5ad441d6c609",
           "case_no": "2017나2055054",
@@ -2133,7 +2199,7 @@
         "base_case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 238.2,
+        "latency_ms": 203.8,
         "base_case": {
           "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
           "case_no": "2020나60108",
@@ -2218,7 +2284,7 @@
         "base_case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
         "status": 200,
         "candidate_count": 5,
-        "latency_ms": 233.9,
+        "latency_ms": 201.6,
         "base_case": {
           "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
           "case_no": "2024다239364",
