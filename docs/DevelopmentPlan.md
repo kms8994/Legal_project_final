@@ -31,7 +31,7 @@
 | 항목 | 현재 상태 | 다음 행동 |
 |------|-----------|----------|
 | 최종 조문 15~30개 | P0 조문별 판례 수 확인 완료 | P1 확장 여부와 최종 15~30개 조문 확정 |
-| 법령정보센터 API 응답 구조 | pagination 확인, `collect_laws`/`collect_cases` 구현 및 dry-run 검증 완료 | Docker/PostgreSQL 준비 후 DB upsert 실검증 |
+| 법령정보센터 API 응답 구조 | pagination 확인, `collect_laws`/`collect_cases` 구현 및 dry-run 검증 완료 | Supabase DB 기준으로 upsert 실검증 |
 | UI 와이어프레임 | 작성 완료 | Next.js 화면 구현 시 기준으로 사용 |
 | API 계약/fixture | 작성 완료 | FastAPI schema와 mock fixture 작성 시 기준으로 사용 |
 | 관리자 검수 운영 | 최소 상태값만 정의 | `AdminReviewSpec.md` 작성 |
@@ -39,11 +39,10 @@
 
 ### 지금 다음에 해야 할 일
 
-1. PostgreSQL 16을 실행하고 pgvector extension 활성화를 확인한다.
-2. migration과 `db/seeds/001_sample_cases.sql`을 실제 DB에 적용한다.
-3. `collect_laws`, `collect_cases`, `normalize`, `split`, `extract`, `structure`, `validate`를 DB upsert 모드로 순서대로 실검증한다.
-4. DB 실검증이 막히면 코드 구현은 자연어 intent parser, 판례 상세 API, 또는 `embed` 파이프라인으로 진행한다.
-5. DB 실검증이 통과하면 이미 구현된 조문 검색 API를 실DB로 smoke test한다.
+1. Supabase PostgreSQL에 적용된 migration과 샘플 seed 상태를 기준으로 조문 검색 흐름을 확장한다.
+2. `collect_laws`, `collect_cases`, `normalize`, `split`, `extract`, `structure`, `validate`를 DB upsert 모드로 순서대로 실검증한다.
+3. 조문 검색 화면 다음 단계로 판례 상세 API 또는 자연어 intent parser를 구현한다.
+4. 이후 embed 파이프라인과 비교 후보 API를 붙인다.
 
 ### 다음 작업자용 실행 요약
 
@@ -67,6 +66,10 @@
 → extract 파이프라인 구현 및 unit test 검증
 → validate 파이프라인 구현 및 unit test 검증
 → rule fallback structure 파이프라인 구현 및 unit test 검증
+→ Supabase PostgreSQL + pgvector migration 적용
+→ 정상 한글 샘플 seed Supabase 적재
+→ 조문 검색 API 실DB smoke test
+→ Next.js BFF와 검색 결과 화면 구현
 ```
 
 현재 주요 파일:
@@ -111,6 +114,10 @@ FastAPI /health TestClient 테스트 통과
 웹 dev server 임시 실행 후 http://localhost:3000 HTTP 200 및 CaseLens 렌더링 확인
 uvicorn foreground startup 확인
 조문 정규화 서비스, 내부 DB repository, `POST /api/v1/search/statute` 라우터 구현 및 fake repository 기반 API 계약 테스트 통과
+Supabase DB `pgcrypto`, `vector` extension 적용 확인
+Supabase DB 핵심 테이블과 샘플 seed 적재 확인
+`민법 제750조` 조문 검색 API 실DB smoke test 200 응답 및 샘플 판례 3건 반환 확인
+Next.js `/api/search/statute` BFF route 구현 및 localhost:3000 HTTP 200 확인
 ```
 
 현재 구현된 실행 스크립트:
@@ -189,17 +196,16 @@ npm.cmd run api:dev
 Invoke-RestMethod -Method Post -Uri "http://localhost:8000/api/v1/search/statute" -ContentType "application/json" -Body "{""query"":""민법 제750조"",""page"":1,""size"":20,""sort"":""relevance""}"
 ```
 
-Docker가 계속 없으면 먼저 Docker Desktop 설치 또는 Docker CLI PATH 등록을 처리한 뒤 위 순서를 반복한다.
+로컬 Docker는 선택 사항이다. 현재 MVP 검증 DB는 Supabase PostgreSQL을 기준으로 진행한다.
 
 다음 구현 단위:
 
 ```text
-1. Docker/PostgreSQL 문제를 해결하고 migration + seed를 실적재
-2. collect/normalize/split/extract/structure/validate DB upsert를 limit=3으로 실검증
-3. DB 실검증 실패 시 schema conflict, JSONB adapter, unique index 충돌을 우선 수정
-4. `POST /api/v1/search/statute`를 실DB로 smoke test하고 SQL/JSONB 검색 오류를 수정
-5. DB 실검증과 조문 검색 API가 통과하면 embed 파이프라인 구현
-6. Docker가 계속 막히면 자연어 intent parser 또는 판례 상세 API를 DB repository + fake repository 테스트 방식으로 구현
+1. collect/normalize/split/extract/structure/validate DB upsert를 Supabase에서 limit=3으로 실검증
+2. DB upsert 실패 시 schema conflict, JSONB adapter, unique index 충돌을 우선 수정
+3. 판례 상세 API 또는 자연어 intent parser를 DB repository + fake repository 테스트 방식으로 구현
+4. 조문 검색 UI에서 판례 상세 화면으로 이동하는 흐름을 구현
+5. DB 실검증과 조문 검색 UI가 안정화되면 embed 파이프라인 구현
 ```
 
 ### 최근 진행 상황
@@ -225,6 +231,8 @@ Docker가 계속 없으면 먼저 Docker Desktop 설치 또는 Docker CLI PATH �
 | 2026-06-04 | `pipelines.structure` rule fallback 구현 및 material_facts unit test 작성 | 완료 |
 | 2026-06-04 | Docker 부재 재확인 후 fallback으로 조문 정규화 서비스와 `POST /api/v1/search/statute` 구현 | 완료 |
 | 2026-06-04 | SQLAlchemy `psycopg` v3 URL 보정 및 조문 검색 API fake repository 테스트 작성, `api:test` 14개 통과 | 완료 |
+| 2026-06-04 | Supabase PostgreSQL 연결, pgvector extension/core schema 적용, 정상 한글 seed 3건 적재 | 완료 |
+| 2026-06-04 | Next.js BFF `/api/search/statute`와 조문 검색 결과 화면 구현, lint/build/API test 통과 | 완료 |
 
 ## 2. 개발 원칙
 
@@ -541,9 +549,9 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 → collect_laws/collect_cases 설계 확정 [완료]
 → 프로젝트 부트스트랩 [완료]
 → DB migration 작성 [완료]
-→ PostgreSQL/pgvector 실행 확인
+→ PostgreSQL/pgvector 실행 확인 [완료: Supabase]
 → 샘플 데이터 seed SQL 작성 [완료]
-→ 샘플 데이터 seed 실적재
+→ 샘플 데이터 seed 실적재 [완료: Supabase]
 → 법령/조문 수집 파이프라인 [완료]
 → 판례 수집 파이프라인 [완료]
 → normalize/split 파이프라인 [완료]
@@ -551,11 +559,11 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 → validate 파이프라인 [완료]
 → 구조화 파이프라인 [완료: rule fallback]
 → 임베딩
-→ 조문 검색 API
+→ 조문 검색 API [완료]
 → 자연어 검색 API
 → 비교 후보 API
 → 비교 분석 API
-→ 프론트 검색 화면
+→ 프론트 검색 화면 [완료: 조문 검색]
 → 프론트 비교 화면
 → 평가 세트
 → QA와 운영 준비
@@ -608,6 +616,8 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - [x] Docker Compose 작성
 - [ ] PostgreSQL 16 실행
 - [ ] pgvector extension 활성화
+- [x] Supabase PostgreSQL 연결
+- [x] Supabase pgvector extension 활성화
 - [x] `.env.example` 작성
 - [x] FastAPI `/health` 구현
 - [x] Next.js 첫 화면 구현
@@ -631,7 +641,7 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - [x] GIN 인덱스 생성
 - [x] pgvector 인덱스 생성
 - [x] 샘플 seed SQL 작성
-- [ ] 샘플 seed 데이터 적재
+- [x] 샘플 seed 데이터 적재
 
 ### E. 데이터 파이프라인
 
@@ -655,6 +665,7 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - [x] 조문 정규화 서비스
 - [x] 내부 DB 기반 조문 검증
 - [x] 조문 검색 API
+- [x] 조문 검색 API 실DB smoke test
 - [ ] 자연어 intent parser
 - [ ] 자연어 검색 API
 - [ ] evidence retrieval
@@ -682,9 +693,9 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 
 ### H. 프론트엔드와 UI/UX
 
-- [ ] 검색 시작 화면
+- [x] 검색 시작 화면
 - [ ] 검색 모드 탭
-- [ ] 검색 결과 카드
+- [x] 검색 결과 카드
 - [ ] 자연어 parsed intent 패널
 - [ ] 기준 판례 선택
 - [ ] 비교 후보 화면
