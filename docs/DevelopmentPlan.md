@@ -874,3 +874,19 @@ MVP 구현 기본값은 `Set B: 균형형`으로 두고, 평가 결과에 따라
 - `pipeline:validate -- --limit 300`: `input_count=226`, `auto_validated=52`, `needs_review=174`, `invalid=0`.
 - `pipeline:embed -- --limit 300`: `case_inputs=220`, `paragraph_inputs=300`, `embeddings_upserted=1032`.
 - `pipeline:split -- --limit 300 --overwrite`는 Supabase statement timeout에 걸렸다. 대량 overwrite는 작은 batch로 나누거나 timeout 설정을 별도로 조정한다.
+
+### 17.5 MVP 평가 1차 결과
+
+- 2026-06-05 기준 `npm.cmd run eval:mvp` 실행 성공.
+- 평가 산출물: `docs/EvaluationSet.md`, `docs/EvaluationRun.md`, `docs/evaluation_run.json`, `scripts/evaluate_mvp.py`.
+- 조문 검색: `precision@10=0.60`, `top1_exact_article_rate=0.60`, `p95_latency_ms=560.4`.
+- 자연어 검색: `avg_top5_relevant_count=1.9`.
+- 비교 후보: `avg_material_fact_match=0.70`, `evidence_coverage_rate=0.0`.
+- 구조화 검증: `needs_review_rate=0.77`.
+- DB snapshot: `cases=221`, `paragraphs=35470`, `structures=226`, `embeddings=1034`.
+- 확인된 개선 지점:
+  - `민법 제756조`, `민법 제760조`는 현재 조문 DB에 없어 404가 발생한다.
+  - `민법 750` 약식 입력은 아직 조문 정규화가 실패한다.
+  - `자동차손해배상 보장법 제3조`는 검색은 200이지만 기대 normalized ref와 결과 cited article이 맞지 않아 P@10이 0으로 측정된다.
+  - 자연어 검색은 `사용자책임`, `공동불법행위`, `소멸시효`, `손해배상 범위` 쿼리에서 Top-5 관련도가 낮다.
+  - 비교 후보 API는 후보를 반환하지만 candidate `evidence_ids`가 비어 있어 evidence coverage가 0으로 측정된다.

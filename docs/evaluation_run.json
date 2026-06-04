@@ -1,0 +1,2304 @@
+{
+  "generated_at": "2026-06-05T02:57:06",
+  "statute": {
+    "metric": {
+      "query_count": 10,
+      "failures": 3,
+      "precision_at_10": 0.6,
+      "top1_exact_article_rate": 0.6,
+      "p95_latency_ms": 560.4
+    },
+    "rows": [
+      {
+        "id": "S01",
+        "query": "민법 제750조",
+        "expected_ref": "민법_제750조",
+        "status": 200,
+        "result_count": 10,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 560.4,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "9761b407-1754-4469-8731-1bd00c760d01",
+            "case_no": "2025나10683",
+            "case_name": "채무부존재확인",
+            "decision_date": "2025-11-18",
+            "score": 0.95,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 제1심판결 중 피고 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다. 2. 소송 총비용은 원고가 부담한다. 2. 항소취지 주문과 같다."
+          },
+          {
+            "rank": 2,
+            "case_id": "5efaf9c9-da9e-4c2d-a1c9-98ee8c0d6bbb",
+            "case_no": "2024나41282",
+            "case_name": "손해배상(기)",
+            "decision_date": "2025-07-10",
+            "score": 0.94,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다. 9. ‘원고는 소외 1에게 이 사건 이혼소송 사건의 확정판결 주문에 기한 의무의 이행으로 소외 2를 인도하라.’는 내용의 이행명령 결정(2020즈..."
+          },
+          {
+            "rank": 3,
+            "case_id": "766dadd3-3793-41ff-a0c9-715ae7813d19",
+            "case_no": "2024다215375, 215382",
+            "case_name": "손해배상(기)등·손해배상(기)[해외 파생상품시장거래에서 투자중개업자의 장중 반대매매를 정한 약관 조항의 효력과 적용 범위 및 투자중개업자의 선관주의의무 위반 여부 등이 문제된 사건]",
+            "decision_date": "2025-03-13",
+            "score": 0.9299999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결의 본소 중 미수금 청구 부분 및 반소에 관한 부분을 파기하고, 이 부분 사건을 서울고등법원에 환송한다."
+          },
+          {
+            "rank": 4,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "decision_date": "2024-07-11",
+            "score": 0.9199999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결을 파기하고, 사건을 제주지방법원에 환송한다."
+          },
+          {
+            "rank": 5,
+            "case_id": "f8a13961-2758-48e2-a140-5c8d2459fb23",
+            "case_no": "2023나43126",
+            "case_name": "부당이득반환청구의소",
+            "decision_date": "2024-06-14",
+            "score": 0.9099999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다."
+          }
+        ]
+      },
+      {
+        "id": "S02",
+        "query": "민법 제751조",
+        "expected_ref": "민법_제751조",
+        "status": 200,
+        "result_count": 10,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 132.4,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "70e33737-b47d-4d32-ae8a-aa422c738add",
+            "case_no": "2014다61654",
+            "case_name": "손해배상(기)",
+            "decision_date": "2018-10-30",
+            "score": 0.95,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제751조"
+            ],
+            "summary_card": "원심판결 중 피고 1, 피고 3, 피고 4, 피고 뉴데일리 주식회사, 피고 7, 피고 9, 피고 주식회사 디지틀조선일보, 피고 주식회사 조선일보사의 패소 부분을 파기하고, 이 부분 사건을 서울고등법원에 환송한다..."
+          },
+          {
+            "rank": 2,
+            "case_id": "02956669-2822-4052-abb9-a879e15533cf",
+            "case_no": "2022나309014",
+            "case_name": "손해배상(의)",
+            "decision_date": "2022-11-23",
+            "score": 0.74,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제752조",
+              "민법_제750조",
+              "민법_제751조"
+            ],
+            "summary_card": "1. 원고들과 피고의 항소를 모두 기각한다. 2. 항소비용은 각자 부담한다. 3. 결론 그렇다면, 제1심 판결은 정당하므로 원고들과 피고의 항소를 모두 기각한다. 판사 서영애(재판장) 김형태 박치봉"
+          },
+          {
+            "rank": 3,
+            "case_id": "8f301a4d-e3e3-4df0-b0b2-2be9bb76b3b0",
+            "case_no": "2020나102561",
+            "case_name": "손해배상(기)",
+            "decision_date": "2022-03-11",
+            "score": 0.73,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제35조",
+              "민법_제750조",
+              "민법_제751조"
+            ],
+            "summary_card": "1. 제1심 판결 중 아래에서 지급을 명하는 금액에 해당하는 피고 4, 피고 5, ○○○○○○△△교회에 대한 원고 3 패소 부분을 취소한다. 피고 4, 피고 5, ○○○○○○△△교회는 공동하여 원고 3에게 50..."
+          },
+          {
+            "rank": 4,
+            "case_id": "404c0e47-fe50-40d5-8a82-854560d9c8c1",
+            "case_no": "2019나51126",
+            "case_name": "손해배상(기)",
+            "decision_date": "2021-02-10",
+            "score": 0.72,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제756조",
+              "민법_제750조",
+              "민법_제751조"
+            ],
+            "summary_card": "1. 원고 1이 이 법원에서 확장 및 감축한 청구를 포함하여 제1심판결을 다음과 같이 변경한다. 가. 원고 1에게, 1) 피고 ○○운수 주식회사는 13,224,800원 및 그중 3,224,800원에 대하여는 2..."
+          },
+          {
+            "rank": 5,
+            "case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
+            "case_no": "2023나100002",
+            "case_name": "손해배상(명예훼손)",
+            "decision_date": "2023-11-22",
+            "score": 0.6499999999999999,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제751조"
+            ],
+            "summary_card": "위자료 일부를 인용하였다."
+          }
+        ]
+      },
+      {
+        "id": "S03",
+        "query": "민법 제396조",
+        "expected_ref": "민법_제396조",
+        "status": 200,
+        "result_count": 1,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 95.5,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
+            "case_no": "2024가단100001",
+            "case_name": "손해배상(교통사고)",
+            "decision_date": "2024-05-10",
+            "score": 0.72,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제396조"
+            ],
+            "summary_card": "피고 책임을 인정하고 원고 과실 30퍼센트를 반영하였다."
+          }
+        ]
+      },
+      {
+        "id": "S04",
+        "query": "민법 제393조",
+        "expected_ref": "민법_제393조",
+        "status": 200,
+        "result_count": 5,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 86.4,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "baac4927-1e86-4819-a3e9-32add7ee3ab2",
+            "case_no": "2020나2034989",
+            "case_name": "주주대표소송(손해배상)",
+            "decision_date": "2021-09-03",
+            "score": 0.9,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제399조",
+              "민법_제393조"
+            ],
+            "summary_card": "1. 제1심판결을 다음과 같이 변경한다. 가. 주식회사 대우건설에, 1) 피고들은 연대하여 별지 인용금액표 ‘4대강 사업 입찰담합 관련 인용금액(원)’란 기재의 각 돈, 2) 피고 9를 제외한 나머지 피고들은 ..."
+          },
+          {
+            "rank": 2,
+            "case_id": "71858010-ef99-4702-b7e8-7e7b3d280bc9",
+            "case_no": "2019다236385",
+            "case_name": "손해배상[주주총회 특별결의를 거치지 않은 영업용 재산의 양도가 이루어진 경우 주주들의 구제수단이 문제된 사건]",
+            "decision_date": "2025-10-16",
+            "score": 0.84,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제393조",
+              "민법_제763조",
+              "민법_제399조"
+            ],
+            "summary_card": "손해배상[주주총회 특별결의를 거치지 않은 영업용 재산의 양도가 이루어진 경우 주주들의 구제수단이 문제된 사건]"
+          },
+          {
+            "rank": 3,
+            "case_id": "71858010-ef99-4702-b7e8-7e7b3d280bc9",
+            "case_no": "2019다236385",
+            "case_name": "손해배상[주주총회 특별결의를 거치지 않은 영업용 재산의 양도가 이루어진 경우 주주들의 구제수단이 문제된 사건]",
+            "decision_date": "2025-10-16",
+            "score": 0.73,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제393조",
+              "민법_제763조",
+              "민법_제399조"
+            ],
+            "summary_card": "상고를 모두 기각한다. 상고비용 중 원고들의 상고로 인한 부분은 원고들이, 피고들의 상고로 인한 부분은 피고들이 각 부담한다."
+          },
+          {
+            "rank": 4,
+            "case_id": "c5b6d1ae-69ca-4f15-8fbe-3415158cc74b",
+            "case_no": "2018나61192",
+            "case_name": "기타(금전)",
+            "decision_date": "2018-12-06",
+            "score": 0.72,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제393조",
+              "민법_제497조"
+            ],
+            "summary_card": "1. 제1심 판결 중 아래에서 지급을 명하는 부분을 초과하는 피고 패소 부분을 취소하고, 그 부분 원고의 청구를 기각한다.피고는 원고에게 99,150,590원과 이에 대하여 2017. 3. 4.부터 2018. ..."
+          },
+          {
+            "rank": 5,
+            "case_id": "58f97fcb-323b-4b1e-8eff-ff40cffb1b0a",
+            "case_no": "2016다202947",
+            "case_name": "손해배상(기)",
+            "decision_date": "2017-12-22",
+            "score": 0.51,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제752조",
+              "민법_제763조",
+              "민법_제393조",
+              "민법_제756조"
+            ],
+            "summary_card": "원심판결의 원고 패소 부분 중 원고에 대한 2013. 9. 4.자 견책처분, 2013. 12. 11.자 직무정지와 대기발령, 소외 1에 대한 2013. 7. 19.자 정직처분에 관한 손해배상청구 부분을 파기하고..."
+          }
+        ]
+      },
+      {
+        "id": "S05",
+        "query": "민법 제763조",
+        "expected_ref": "민법_제763조",
+        "status": 200,
+        "result_count": 5,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 83.5,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "71858010-ef99-4702-b7e8-7e7b3d280bc9",
+            "case_no": "2019다236385",
+            "case_name": "손해배상[주주총회 특별결의를 거치지 않은 영업용 재산의 양도가 이루어진 경우 주주들의 구제수단이 문제된 사건]",
+            "decision_date": "2025-10-16",
+            "score": 0.85,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제393조",
+              "민법_제763조",
+              "민법_제399조"
+            ],
+            "summary_card": "손해배상[주주총회 특별결의를 거치지 않은 영업용 재산의 양도가 이루어진 경우 주주들의 구제수단이 문제된 사건]"
+          },
+          {
+            "rank": 2,
+            "case_id": "71858010-ef99-4702-b7e8-7e7b3d280bc9",
+            "case_no": "2019다236385",
+            "case_name": "손해배상[주주총회 특별결의를 거치지 않은 영업용 재산의 양도가 이루어진 경우 주주들의 구제수단이 문제된 사건]",
+            "decision_date": "2025-10-16",
+            "score": 0.74,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제393조",
+              "민법_제763조",
+              "민법_제399조"
+            ],
+            "summary_card": "상고를 모두 기각한다. 상고비용 중 원고들의 상고로 인한 부분은 원고들이, 피고들의 상고로 인한 부분은 피고들이 각 부담한다."
+          },
+          {
+            "rank": 3,
+            "case_id": "9f97f3df-9676-426d-86c6-5112ea8783c5",
+            "case_no": "2015나2041792",
+            "case_name": "차별구제",
+            "decision_date": "2019-01-25",
+            "score": 0.73,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제764조",
+              "민법_제763조"
+            ],
+            "summary_card": "1. 당심에서 추가 및 변경한 원고 1, 원고 2, 원고 3의 청구를 포함하여 제1심판결 중 위 원고들에 대한 부분을 다음과 같이 변경한다. 가. 원고 1, 원고 2, 원고 3에게, 1) 피고 금호고속 주식회사..."
+          },
+          {
+            "rank": 4,
+            "case_id": "58f97fcb-323b-4b1e-8eff-ff40cffb1b0a",
+            "case_no": "2016다202947",
+            "case_name": "손해배상(기)",
+            "decision_date": "2017-12-22",
+            "score": 0.52,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제752조",
+              "민법_제763조",
+              "민법_제393조",
+              "민법_제756조"
+            ],
+            "summary_card": "원심판결의 원고 패소 부분 중 원고에 대한 2013. 9. 4.자 견책처분, 2013. 12. 11.자 직무정지와 대기발령, 소외 1에 대한 2013. 7. 19.자 정직처분에 관한 손해배상청구 부분을 파기하고..."
+          },
+          {
+            "rank": 5,
+            "case_id": "ad5f6864-c456-484a-8420-57e31680e2d0",
+            "case_no": "2016다248998",
+            "case_name": "손해배상등",
+            "decision_date": "2020-08-27",
+            "score": 0.10999999999999999,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제103조",
+              "민법_제2조",
+              "민법_제750조",
+              "민법_제751조",
+              "민법_제104조",
+              "민법_제394조",
+              "민법_제763조"
+            ],
+            "summary_card": "원심판결의 원고 1 패소 부분 중 피고들에 대한 승낙의 의사표시 청구 부분을 파기하고, 이 부분 사건을 서울고등법원에 환송한다. 원고 1의 나머지 상고와 원고 2의 상고를 모두 기각한다. 원고 2의 상고로 인한..."
+          }
+        ]
+      },
+      {
+        "id": "S06",
+        "query": "민법 제766조",
+        "expected_ref": "민법_제766조",
+        "status": 200,
+        "result_count": 10,
+        "precision_at_k": 1.0,
+        "first_hit_rank": 1,
+        "latency_ms": 86.9,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "68f68f57-4df0-4338-a495-08a1526e7f4d",
+            "case_no": "2021다213477",
+            "case_name": "근로에관한소송",
+            "decision_date": "2023-04-27",
+            "score": 0.95,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제766조"
+            ],
+            "summary_card": "원심판결 중 고용의 의사표시 청구 부분을 파기하고, 이 부분 사건을 춘천지방법원 강릉지원에 환송한다. 나머지 상고를 기각한다."
+          },
+          {
+            "rank": 2,
+            "case_id": "4f1a97fe-6139-4528-bc51-4518c277c8a5",
+            "case_no": "2021다229618",
+            "case_name": "근로자지위확인등",
+            "decision_date": "2023-04-27",
+            "score": 0.94,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제766조"
+            ],
+            "summary_card": "상고를 기각한다. 상고비용은 피고가 부담한다. 5. 결론 그러므로 상고를 기각하고, 상고비용은 패소자가 부담하도록 하여, 관여 대법관의 일치된 의견으로 주문과 같이 판결한다. 대법관 이흥구(재판장) 안철상(주심..."
+          },
+          {
+            "rank": 3,
+            "case_id": "ab2606bb-ef4f-49e4-8e6a-e4f027d50120",
+            "case_no": "2021다229588",
+            "case_name": "근로에관한소송",
+            "decision_date": "2023-04-27",
+            "score": 0.9299999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제766조"
+            ],
+            "summary_card": "원심판결 중 원고 1의 근로자지위확인청구 부분을 파기하고, 이 부분 제1심판결을 취소하며, 이 부분 소를 각하한다. 피고의 원고 2에 대한 상고와 원고 1에 대한 나머지 상고를 모두 기각한다. 원고 1과 피고 ..."
+          },
+          {
+            "rank": 4,
+            "case_id": "4b243301-d640-4ce0-8b6f-f249bcd6cd7d",
+            "case_no": "2022나2011720",
+            "case_name": "임금등",
+            "decision_date": "2023-01-27",
+            "score": 0.9199999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제766조"
+            ],
+            "summary_card": "1. 제1심 판결을 다음과 같이 변경한다. 가. 피고는 원고들에게 별지1 청구금액 및 인용금액표 중 원고별 ‘인용금액’란 기재 각 돈 및 이에 대하여 2020. 10. 1.부터 2023. 1. 27.까지 연 5..."
+          },
+          {
+            "rank": 5,
+            "case_id": "0dea023a-362e-4cf7-b497-30b67ac20be5",
+            "case_no": "2020나1078",
+            "case_name": "근로에관한소송",
+            "decision_date": "2021-04-09",
+            "score": 0.9099999999999999,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제766조"
+            ],
+            "summary_card": "1. 피고의 항소를 기각한다. 2. 항소비용은 피고가 부담한다. 2. 항소취지 제1심판결을 취소한다. 원고들의 청구를 모두 기각한다."
+          }
+        ]
+      },
+      {
+        "id": "S07",
+        "query": "민법 제756조",
+        "expected_ref": "민법_제756조",
+        "status": 404,
+        "result_count": 0,
+        "precision_at_k": 0.0,
+        "first_hit_rank": null,
+        "latency_ms": 53.5,
+        "top_results": []
+      },
+      {
+        "id": "S08",
+        "query": "민법 제760조",
+        "expected_ref": "민법_제760조",
+        "status": 404,
+        "result_count": 0,
+        "precision_at_k": 0.0,
+        "first_hit_rank": null,
+        "latency_ms": 53.4,
+        "top_results": []
+      },
+      {
+        "id": "S09",
+        "query": "민법 750",
+        "expected_ref": "민법_제750조",
+        "status": 400,
+        "result_count": 0,
+        "precision_at_k": 0.0,
+        "first_hit_rank": null,
+        "latency_ms": 17.0,
+        "top_results": []
+      },
+      {
+        "id": "S10",
+        "query": "자동차손해배상 보장법 제3조",
+        "expected_ref": "자동차손해배상_보장법_제3조",
+        "status": 200,
+        "result_count": 4,
+        "precision_at_k": 0.0,
+        "first_hit_rank": null,
+        "latency_ms": 92.4,
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
+            "case_no": "2019가단5248886",
+            "case_name": "구상금",
+            "decision_date": "2020-04-21",
+            "score": 0.95,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조"
+            ],
+            "summary_card": "1. 피고는 원고에게 30,000,000원 및 이에 대하여 2019. 4. 25.부터 2020. 4. 21.까지는 연 5%의, 그 다음날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2...."
+          },
+          {
+            "rank": 2,
+            "case_id": "d314524d-4334-4960-ac7e-0b2c532ece01",
+            "case_no": "2015가단5023386",
+            "case_name": "보험금 등 청구의 소",
+            "decision_date": "2017-08-08",
+            "score": 0.74,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조",
+              "민법_제750조",
+              "민법_제397조"
+            ],
+            "summary_card": "1. 원고에게, 가. 피고 4, 피고 5는 공동하여 253,722,330원 및 이에 대하여 2012. 6. 5.부터 2017. 8. 8.까지는 연 5%, 그 다음날부터 다 갚는 날까지는 연 15%의 각 비율에 ..."
+          },
+          {
+            "rank": 3,
+            "case_id": "f0c29a26-9c55-42f5-ac06-965eff16ea6e",
+            "case_no": "2023나41651",
+            "case_name": "부당이득금",
+            "decision_date": "2024-04-17",
+            "score": 0.53,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조",
+              "민법_제734조",
+              "민법_제744조"
+            ],
+            "summary_card": "1. 제1심판결 중 아래에서 지급을 명하는 금액을 초과하는 피고 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다. 피고는 원고에게 87,215,375원 및 이에 대하여 2022. 12. ..."
+          },
+          {
+            "rank": 4,
+            "case_id": "78babfe6-e7f5-487a-9396-ff5080a64c92",
+            "case_no": "2022나9926",
+            "case_name": "구상금",
+            "decision_date": "2022-12-13",
+            "score": 0.52,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "자동차손해배상 보장법_제2조",
+              "자동차손해배상 보장법_제5조",
+              "자동차손해배상 보장법_제3조"
+            ],
+            "summary_card": "1. 제1심판결 가운데 제2항에서 지급을 명하는 금액에 해당하는 원고 패소 부분을 취소한다. 2. 피고는 원고에게 24,848,648원과 이에 대하여 2020. 12. 1.부터 2022. 12. 13.까지는 연..."
+          }
+        ]
+      }
+    ]
+  },
+  "natural": {
+    "metric": {
+      "query_count": 10,
+      "failures": 0,
+      "avg_top5_relevant_count": 1.9,
+      "p95_latency_ms": 15185.4
+    },
+    "rows": [
+      {
+        "id": "N01",
+        "query": "교통사고 피해자의 무단횡단과 과실상계가 문제된 손해배상 판례",
+        "expected_terms": [
+          "교통사고",
+          "무단횡단",
+          "과실상계",
+          "손해배상"
+        ],
+        "expected_articles": [
+          "민법_제396조",
+          "민법_제750조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 4,
+        "latency_ms": 15185.4,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "교통사고",
+            "피해자의",
+            "무단횡단과",
+            "과실상계가",
+            "문제된",
+            "손해배상"
+          ],
+          "legal_issue": "traffic accident liability and damages",
+          "inferred_articles": [
+            "civil_act_750",
+            "civil_act_396"
+          ],
+          "inferred_articles_validated": true,
+          "facts_summary": "교통사고 피해자의 무단횡단과 과실상계가 문제된 손해배상 판례",
+          "confidence": 0.95,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
+            "case_no": "2024가단100001",
+            "case_name": "손해배상(교통사고)",
+            "decision_date": "2024-05-10",
+            "score": 0.393,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제396조"
+            ],
+            "summary_card": "피고 책임을 인정하고 원고 과실 30퍼센트를 반영하였다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 2,
+            "case_id": "f0c29a26-9c55-42f5-ac06-965eff16ea6e",
+            "case_no": "2023나41651",
+            "case_name": "부당이득금",
+            "decision_date": "2024-04-17",
+            "score": 0.331,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조",
+              "민법_제734조",
+              "민법_제744조"
+            ],
+            "summary_card": "1. 제1심판결 중 아래에서 지급을 명하는 금액을 초과하는 피고 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다. 피고는 원고에게 87,215,375원 및 이에 대하여 2022. 12. ...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 3,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "decision_date": "2024-07-11",
+            "score": 0.32,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결을 파기하고, 사건을 제주지방법원에 환송한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 4,
+            "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
+            "case_no": "2024다239364",
+            "case_name": "손해배상(기)[공인중개사가 부동산 중개 과정에서 임대차보증금 반환채무가 매수인에게 면책적으로 인수되지 않는다는 사정을 설명할 주의의무가 인정되는지 여부가 문제된 사건]",
+            "decision_date": "2024-09-12",
+            "score": 0.32,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 이 부분 사건을 울산지방법원에 환송한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 5,
+            "case_id": "d314524d-4334-4960-ac7e-0b2c532ece01",
+            "case_no": "2015가단5023386",
+            "case_name": "보험금 등 청구의 소",
+            "decision_date": "2017-08-08",
+            "score": 0.317,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조",
+              "민법_제750조",
+              "민법_제397조"
+            ],
+            "summary_card": "1. 원고에게, 가. 피고 4, 피고 5는 공동하여 253,722,330원 및 이에 대하여 2012. 6. 5.부터 2017. 8. 8.까지는 연 5%, 그 다음날부터 다 갚는 날까지는 연 15%의 각 비율에 ...",
+            "heuristic_relevant": true
+          }
+        ]
+      },
+      {
+        "id": "N02",
+        "query": "운전자가 전방주시의무를 위반해 보행자를 다치게 한 사건",
+        "expected_terms": [
+          "전방주시",
+          "보행자",
+          "교통사고",
+          "과실"
+        ],
+        "expected_articles": [
+          "민법_제750조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 4,
+        "latency_ms": 229.1,
+        "parsed_intent": {
+          "case_type": null,
+          "legal_domain": null,
+          "keywords": [
+            "운전자가",
+            "전방주시의무를",
+            "위반해",
+            "보행자를",
+            "다치게",
+            "사건"
+          ],
+          "legal_issue": "structured keyword search",
+          "inferred_articles": [],
+          "inferred_articles_validated": false,
+          "facts_summary": "운전자가 전방주시의무를 위반해 보행자를 다치게 한 사건",
+          "confidence": 0.69,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
+            "case_no": "2019가단5248886",
+            "case_name": "구상금",
+            "decision_date": "2020-04-21",
+            "score": 0.316,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조"
+            ],
+            "summary_card": "1. 피고는 원고에게 30,000,000원 및 이에 대하여 2019. 4. 25.부터 2020. 4. 21.까지는 연 5%의, 그 다음날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2....",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 2,
+            "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
+            "case_no": "2020나60108",
+            "case_name": "구상금",
+            "decision_date": "2021-07-14",
+            "score": 0.27,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 피고들의 항소를 모두 기각한다. 2. 항소비용은 피고들이 부담한다. 2. 항소취지 제1심판결 중 피고들 각 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 3,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "decision_date": "2024-07-11",
+            "score": 0.255,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결을 파기하고, 사건을 제주지방법원에 환송한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 4,
+            "case_id": "08294fe4-8531-4cde-aead-c7364a57889e",
+            "case_no": "2016가합103142",
+            "case_name": "손해배상(기)",
+            "decision_date": "2017-12-15",
+            "score": 0.248,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 청구를 기각한다. 2. 소송비용은 원고가 부담한다. 4. 결론 그렇다면 원고의 청구는 이유 없어 이를 기각하기로 하여, 주문과 같이 판결한다. 판사 박헌행(재판장) 조영민 양해인",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 5,
+            "case_id": "8439ff2e-abc1-451f-9b48-fbf9a572f071",
+            "case_no": "2016나2088453",
+            "case_name": "손해배상(기)",
+            "decision_date": "2017-12-15",
+            "score": 0.246,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 제1심판결 중 아래에서 지급을 명하는 금액에 해당하는 원고 1의 패소 부분 및 원고 2, 원고 3, 원고 4의 예비적 청구에 관한 패소 부분을 취소한다. 피고는, 원고 1에게 38,610,825원 및 이에...",
+            "heuristic_relevant": true
+          }
+        ]
+      },
+      {
+        "id": "N03",
+        "query": "자동차 운행자 책임과 보험자의 손해배상 책임이 문제된 판례",
+        "expected_terms": [
+          "자동차",
+          "운행자",
+          "보험",
+          "손해배상"
+        ],
+        "expected_articles": [
+          "자동차손해배상_보장법_제3조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 1,
+        "latency_ms": 243.8,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "자동차",
+            "운행자",
+            "책임과",
+            "보험자의",
+            "손해배상",
+            "책임이",
+            "문제된"
+          ],
+          "legal_issue": "structured keyword search",
+          "inferred_articles": [
+            "civil_act_750"
+          ],
+          "inferred_articles_validated": true,
+          "facts_summary": "자동차 운행자 책임과 보험자의 손해배상 책임이 문제된 판례",
+          "confidence": 0.95,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
+            "case_no": "2019가단5248886",
+            "case_name": "구상금",
+            "decision_date": "2020-04-21",
+            "score": 0.325,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조"
+            ],
+            "summary_card": "1. 피고는 원고에게 30,000,000원 및 이에 대하여 2019. 4. 25.부터 2020. 4. 21.까지는 연 5%의, 그 다음날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2....",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 2,
+            "case_id": "74e08049-3fa6-4dfb-9490-bf8036bff0bd",
+            "case_no": "2021나41725",
+            "case_name": "구상금",
+            "decision_date": "2022-06-16",
+            "score": 0.316,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다. 4. 결론 원고의 이 사건 청구는 이유 없어 기각하여야 한다. 제1심판결은 이와 결론을 같이하여 정당하므로 원고의 항소는 이유 없어 기각한다. 판...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 3,
+            "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
+            "case_no": "2020나60108",
+            "case_name": "구상금",
+            "decision_date": "2021-07-14",
+            "score": 0.316,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 피고들의 항소를 모두 기각한다. 2. 항소비용은 피고들이 부담한다. 2. 항소취지 제1심판결 중 피고들 각 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 4,
+            "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
+            "case_no": "2024다239364",
+            "case_name": "손해배상(기)[공인중개사가 부동산 중개 과정에서 임대차보증금 반환채무가 매수인에게 면책적으로 인수되지 않는다는 사정을 설명할 주의의무가 인정되는지 여부가 문제된 사건]",
+            "decision_date": "2024-09-12",
+            "score": 0.313,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 이 부분 사건을 울산지방법원에 환송한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 5,
+            "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
+            "case_no": "2024가단100001",
+            "case_name": "손해배상(교통사고)",
+            "decision_date": "2024-05-10",
+            "score": 0.306,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제396조"
+            ],
+            "summary_card": "피고 책임을 인정하고 원고 과실 30퍼센트를 반영하였다.",
+            "heuristic_relevant": false
+          }
+        ]
+      },
+      {
+        "id": "N04",
+        "query": "피해자에게도 일부 잘못이 있어 배상액이 줄어든 사건",
+        "expected_terms": [
+          "피해자",
+          "과실",
+          "배상액",
+          "감액"
+        ],
+        "expected_articles": [
+          "민법_제396조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 0,
+        "latency_ms": 218.7,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "피해자에게도",
+            "일부",
+            "잘못이",
+            "있어",
+            "배상액이",
+            "줄어든",
+            "사건"
+          ],
+          "legal_issue": "structured keyword search",
+          "inferred_articles": [],
+          "inferred_articles_validated": false,
+          "facts_summary": "피해자에게도 일부 잘못이 있어 배상액이 줄어든 사건",
+          "confidence": 0.8,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
+            "case_no": "2020나62251",
+            "case_name": "손해배상(기)",
+            "decision_date": "2023-07-20",
+            "score": 0.302,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 당심에서의 확장된 청구를 포함하여 제1심 판결을 아래와 같이 변경한다. 가. 이 사건 소 중 2014. 10. 27.자 공시에 관한 자본시장과 금융투자업에 관한 법률 제162조에 따른 손해배상청구 부분을 ...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 2,
+            "case_id": "d832ff59-4f62-4be0-8eae-3a55947bb90b",
+            "case_no": "2022가단5093918",
+            "case_name": "손해배상(기)",
+            "decision_date": "2023-02-22",
+            "score": 0.285,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 피고는 원고에게 23,912,946원 및 이에 대하여 2022. 3. 29.부터 2023. 2. 22.까지는 연 5%, 그다음 날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2. ...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 3,
+            "case_id": "302b8106-da98-4315-b667-b85a6d05bc97",
+            "case_no": "2021가단557753",
+            "case_name": "구상금",
+            "decision_date": "2023-06-22",
+            "score": 0.281,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 피고들은 공동하여 원고에게 28,823,980원 및 이에 대하여는 2019. 2. 12.부터 2023. 6. 22.까지는 연 5%, 그 다음날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 4,
+            "case_id": "06b2f1ba-7cdb-4330-a701-c49df4bb1a8d",
+            "case_no": "2023나12234",
+            "case_name": "손해배상(기)",
+            "decision_date": "2024-04-18",
+            "score": 0.274,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제454조"
+            ],
+            "summary_card": "1. 이 법원에서 추가한 선택적 청구를 포함하여 제1심판결을 다음과 같이 변경한다.가. 피고들은 공동하여 원고에게 65,783,374원 및 이에 대하여 피고 1은 2021. 10. 16.부터, 피고 한국공인중개...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 5,
+            "case_id": "a3c3d711-cbe4-4c01-a6da-f0ed2158dc46",
+            "case_no": "2017가단10716",
+            "case_name": "손해배상(기)",
+            "decision_date": "2019-07-12",
+            "score": 0.269,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제758조"
+            ],
+            "summary_card": "1. 피고는 원고에게 4,099,128원과 이에 대하여 2017. 11. 24.부터 2019. 7. 12.까지는 연 5%의, 그 다음 날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2....",
+            "heuristic_relevant": false
+          }
+        ]
+      },
+      {
+        "id": "N05",
+        "query": "위자료 액수가 어떻게 정해지는지 문제된 손해배상 판례",
+        "expected_terms": [
+          "위자료",
+          "정신적",
+          "손해",
+          "배상"
+        ],
+        "expected_articles": [
+          "민법_제751조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 4,
+        "latency_ms": 234.3,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "위자료",
+            "액수가",
+            "어떻게",
+            "정해지는지",
+            "문제된",
+            "손해배상"
+          ],
+          "legal_issue": "defamation and non-property damages",
+          "inferred_articles": [
+            "civil_act_750",
+            "civil_act_751"
+          ],
+          "inferred_articles_validated": true,
+          "facts_summary": "위자료 액수가 어떻게 정해지는지 문제된 손해배상 판례",
+          "confidence": 0.95,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
+            "case_no": "2023나100002",
+            "case_name": "손해배상(명예훼손)",
+            "decision_date": "2023-11-22",
+            "score": 0.358,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제751조"
+            ],
+            "summary_card": "위자료 일부를 인용하였다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 2,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "decision_date": "2024-07-11",
+            "score": 0.335,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결을 파기하고, 사건을 제주지방법원에 환송한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 3,
+            "case_id": "766dadd3-3793-41ff-a0c9-715ae7813d19",
+            "case_no": "2024다215375, 215382",
+            "case_name": "손해배상(기)등·손해배상(기)[해외 파생상품시장거래에서 투자중개업자의 장중 반대매매를 정한 약관 조항의 효력과 적용 범위 및 투자중개업자의 선관주의의무 위반 여부 등이 문제된 사건]",
+            "decision_date": "2025-03-13",
+            "score": 0.325,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결의 본소 중 미수금 청구 부분 및 반소에 관한 부분을 파기하고, 이 부분 사건을 서울고등법원에 환송한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 4,
+            "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
+            "case_no": "2024다239364",
+            "case_name": "손해배상(기)[공인중개사가 부동산 중개 과정에서 임대차보증금 반환채무가 매수인에게 면책적으로 인수되지 않는다는 사정을 설명할 주의의무가 인정되는지 여부가 문제된 사건]",
+            "decision_date": "2024-09-12",
+            "score": 0.318,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 이 부분 사건을 울산지방법원에 환송한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 5,
+            "case_id": "b4824a9d-83f8-4144-b274-df32134c82e9",
+            "case_no": "2022나2009024",
+            "case_name": "차별구제청구등",
+            "decision_date": "2022-10-06",
+            "score": 0.301,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고들의 항소를 모두 기각한다. 2. 항소비용은 각자 부담한다.",
+            "heuristic_relevant": false
+          }
+        ]
+      },
+      {
+        "id": "N06",
+        "query": "회사 직원이 업무 중 사고를 내서 사용자 책임이 문제된 사건",
+        "expected_terms": [
+          "회사",
+          "직원",
+          "업무",
+          "사용자책임"
+        ],
+        "expected_articles": [
+          "민법_제756조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 0,
+        "latency_ms": 225.6,
+        "parsed_intent": {
+          "case_type": null,
+          "legal_domain": null,
+          "keywords": [
+            "회사",
+            "직원이",
+            "업무",
+            "사고를",
+            "내서",
+            "사용자",
+            "책임이",
+            "문제된",
+            "사건"
+          ],
+          "legal_issue": "traffic accident liability and damages",
+          "inferred_articles": [],
+          "inferred_articles_validated": false,
+          "facts_summary": "회사 직원이 업무 중 사고를 내서 사용자 책임이 문제된 사건",
+          "confidence": 0.7,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
+            "case_no": "2020나62251",
+            "case_name": "손해배상(기)",
+            "decision_date": "2023-07-20",
+            "score": 0.313,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 당심에서의 확장된 청구를 포함하여 제1심 판결을 아래와 같이 변경한다. 가. 이 사건 소 중 2014. 10. 27.자 공시에 관한 자본시장과 금융투자업에 관한 법률 제162조에 따른 손해배상청구 부분을 ...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 2,
+            "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
+            "case_no": "2019가단5248886",
+            "case_name": "구상금",
+            "decision_date": "2020-04-21",
+            "score": 0.312,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조"
+            ],
+            "summary_card": "1. 피고는 원고에게 30,000,000원 및 이에 대하여 2019. 4. 25.부터 2020. 4. 21.까지는 연 5%의, 그 다음날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2....",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 3,
+            "case_id": "8e3597ce-b39c-4c5c-8b37-868b9cde7ecc",
+            "case_no": "2020나64837",
+            "case_name": "손해배상(기)",
+            "decision_date": "2021-12-16",
+            "score": 0.292,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 제1심판결 중 주식회사 드올에 대한 부분을 다음과 같이 변경한다. 가. 피고 삼일냉장 주식회사는 원고에게 167,771,110원과 이에 대하여 2017. 5. 26.부터 2021. 12. 16.까지는 연 ...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 4,
+            "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
+            "case_no": "2020나60108",
+            "case_name": "구상금",
+            "decision_date": "2021-07-14",
+            "score": 0.282,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 피고들의 항소를 모두 기각한다. 2. 항소비용은 피고들이 부담한다. 2. 항소취지 제1심판결 중 피고들 각 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 5,
+            "case_id": "74e08049-3fa6-4dfb-9490-bf8036bff0bd",
+            "case_no": "2021나41725",
+            "case_name": "구상금",
+            "decision_date": "2022-06-16",
+            "score": 0.273,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다. 4. 결론 원고의 이 사건 청구는 이유 없어 기각하여야 한다. 제1심판결은 이와 결론을 같이하여 정당하므로 원고의 항소는 이유 없어 기각한다. 판...",
+            "heuristic_relevant": false
+          }
+        ]
+      },
+      {
+        "id": "N07",
+        "query": "여러 사람이 함께 손해를 발생시킨 공동불법행위 판례",
+        "expected_terms": [
+          "공동",
+          "불법행위",
+          "손해",
+          "여러"
+        ],
+        "expected_articles": [
+          "민법_제760조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 0,
+        "latency_ms": 225.7,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "여러",
+            "사람이",
+            "함께",
+            "손해를",
+            "발생시킨",
+            "공동불법행위"
+          ],
+          "legal_issue": "structured keyword search",
+          "inferred_articles": [
+            "civil_act_750"
+          ],
+          "inferred_articles_validated": true,
+          "facts_summary": "여러 사람이 함께 손해를 발생시킨 공동불법행위 판례",
+          "confidence": 0.95,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "d95a8e66-380b-480e-b437-5ad441d6c609",
+            "case_no": "2017나2055054",
+            "case_name": "손해배상(기)",
+            "decision_date": "2018-07-11",
+            "score": 0.271,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 제1심 판결 중 별지 4 원고들목록의 ‘경품행사응모, 인정’ 란에 표기된 원고들(원고 122 포함) 및 같은 목록의 ‘FMC회원, 제3자제공미동의’ 란에 표기된 원고들(같은 목록의 ‘FMC회원, 사전필터링...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 2,
+            "case_id": "5efaf9c9-da9e-4c2d-a1c9-98ee8c0d6bbb",
+            "case_no": "2024나41282",
+            "case_name": "손해배상(기)",
+            "decision_date": "2025-07-10",
+            "score": 0.265,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다. 9. ‘원고는 소외 1에게 이 사건 이혼소송 사건의 확정판결 주문에 기한 의무의 이행으로 소외 2를 인도하라.’는 내용의 이행명령 결정(2020즈...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 3,
+            "case_id": "74e08049-3fa6-4dfb-9490-bf8036bff0bd",
+            "case_no": "2021나41725",
+            "case_name": "구상금",
+            "decision_date": "2022-06-16",
+            "score": 0.265,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 원고의 항소를 기각한다. 2. 항소비용은 원고가 부담한다. 4. 결론 원고의 이 사건 청구는 이유 없어 기각하여야 한다. 제1심판결은 이와 결론을 같이하여 정당하므로 원고의 항소는 이유 없어 기각한다. 판...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 4,
+            "case_id": "8439ff2e-abc1-451f-9b48-fbf9a572f071",
+            "case_no": "2016나2088453",
+            "case_name": "손해배상(기)",
+            "decision_date": "2017-12-15",
+            "score": 0.265,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 제1심판결 중 아래에서 지급을 명하는 금액에 해당하는 원고 1의 패소 부분 및 원고 2, 원고 3, 원고 4의 예비적 청구에 관한 패소 부분을 취소한다. 피고는, 원고 1에게 38,610,825원 및 이에...",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 5,
+            "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
+            "case_no": "2019가단5248886",
+            "case_name": "구상금",
+            "decision_date": "2020-04-21",
+            "score": 0.258,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "자동차손해배상 보장법_제3조"
+            ],
+            "summary_card": "1. 피고는 원고에게 30,000,000원 및 이에 대하여 2019. 4. 25.부터 2020. 4. 21.까지는 연 5%의, 그 다음날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2....",
+            "heuristic_relevant": false
+          }
+        ]
+      },
+      {
+        "id": "N08",
+        "query": "사고와 손해 사이의 인과관계가 다투어진 판례",
+        "expected_terms": [
+          "사고",
+          "손해",
+          "인과관계"
+        ],
+        "expected_articles": [
+          "민법_제750조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 5,
+        "latency_ms": 243.2,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "사고와",
+            "손해",
+            "사이의",
+            "인과관계가",
+            "다투어진"
+          ],
+          "legal_issue": "traffic accident liability and damages",
+          "inferred_articles": [],
+          "inferred_articles_validated": false,
+          "facts_summary": "사고와 손해 사이의 인과관계가 다투어진 판례",
+          "confidence": 0.75,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
+            "case_no": "2020나60108",
+            "case_name": "구상금",
+            "decision_date": "2021-07-14",
+            "score": 0.346,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 피고들의 항소를 모두 기각한다. 2. 항소비용은 피고들이 부담한다. 2. 항소취지 제1심판결 중 피고들 각 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 2,
+            "case_id": "8e3597ce-b39c-4c5c-8b37-868b9cde7ecc",
+            "case_no": "2020나64837",
+            "case_name": "손해배상(기)",
+            "decision_date": "2021-12-16",
+            "score": 0.271,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 제1심판결 중 주식회사 드올에 대한 부분을 다음과 같이 변경한다. 가. 피고 삼일냉장 주식회사는 원고에게 167,771,110원과 이에 대하여 2017. 5. 26.부터 2021. 12. 16.까지는 연 ...",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 3,
+            "case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
+            "case_no": "2020나62251",
+            "case_name": "손해배상(기)",
+            "decision_date": "2023-07-20",
+            "score": 0.27,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 당심에서의 확장된 청구를 포함하여 제1심 판결을 아래와 같이 변경한다. 가. 이 사건 소 중 2014. 10. 27.자 공시에 관한 자본시장과 금융투자업에 관한 법률 제162조에 따른 손해배상청구 부분을 ...",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 4,
+            "case_id": "bc184798-c033-4dae-bce2-5db6b791c232",
+            "case_no": "2015나2047271",
+            "case_name": "손해배상(지)",
+            "decision_date": "2018-10-11",
+            "score": 0.262,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "1. 당심에서 원고 승계참가인의 승계참가신청에 따라, 피고는 원고 승계참가인에게 17,403,225원 및 이에 대한 2015. 1. 1.부터 2018. 10. 11.까지는 연 5%의, 그 다음 날부터 다 갚는 ...",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 5,
+            "case_id": "69134641-edd7-4e30-94b9-15e05408d0d5",
+            "case_no": "2017두45933",
+            "case_name": "유족급여및장의비부지급처분취소",
+            "decision_date": "2021-09-09",
+            "score": 0.258,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제390조",
+              "민법_제750조"
+            ],
+            "summary_card": "상고를 기각한다. 상고비용은 원고가 부담한다. 6. 결론 그러므로 상고를 기각하고 상고비용은 패소자가 부담하기로 하여 주문과 같이 판결한다. 이 판결에는 대법관 김재형, 대법관 박정화, 대법관 김선수, 대법관 ...",
+            "heuristic_relevant": true
+          }
+        ]
+      },
+      {
+        "id": "N09",
+        "query": "손해배상청구권 소멸시효가 문제된 판례",
+        "expected_terms": [
+          "손해배상청구권",
+          "소멸시효"
+        ],
+        "expected_articles": [
+          "민법_제766조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 0,
+        "latency_ms": 233.8,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "손해배상청구권",
+            "소멸시효가",
+            "문제된"
+          ],
+          "legal_issue": "structured keyword search",
+          "inferred_articles": [
+            "civil_act_750"
+          ],
+          "inferred_articles_validated": true,
+          "facts_summary": "손해배상청구권 소멸시효가 문제된 판례",
+          "confidence": 0.87,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
+            "case_no": "2024다239364",
+            "case_name": "손해배상(기)[공인중개사가 부동산 중개 과정에서 임대차보증금 반환채무가 매수인에게 면책적으로 인수되지 않는다는 사정을 설명할 주의의무가 인정되는지 여부가 문제된 사건]",
+            "decision_date": "2024-09-12",
+            "score": 0.33,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 이 부분 사건을 울산지방법원에 환송한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 2,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "decision_date": "2024-07-11",
+            "score": 0.323,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결을 파기하고, 사건을 제주지방법원에 환송한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 3,
+            "case_id": "766dadd3-3793-41ff-a0c9-715ae7813d19",
+            "case_no": "2024다215375, 215382",
+            "case_name": "손해배상(기)등·손해배상(기)[해외 파생상품시장거래에서 투자중개업자의 장중 반대매매를 정한 약관 조항의 효력과 적용 범위 및 투자중개업자의 선관주의의무 위반 여부 등이 문제된 사건]",
+            "decision_date": "2025-03-13",
+            "score": 0.306,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결의 본소 중 미수금 청구 부분 및 반소에 관한 부분을 파기하고, 이 부분 사건을 서울고등법원에 환송한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 4,
+            "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
+            "case_no": "2024가단100001",
+            "case_name": "손해배상(교통사고)",
+            "decision_date": "2024-05-10",
+            "score": 0.295,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제396조"
+            ],
+            "summary_card": "피고 책임을 인정하고 원고 과실 30퍼센트를 반영하였다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 5,
+            "case_id": "80494bdf-ce3e-4dce-b38d-46b7a6347fdf",
+            "case_no": "2020다300299",
+            "case_name": "손해배상(기)[포괄임금계약의 최저임금법 위반 여부를 판단하는 방법이 문제된 사건]",
+            "decision_date": "2024-12-26",
+            "score": 0.286,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제758조",
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 사건을 서울고등법원에 환송한다.",
+            "heuristic_relevant": false
+          }
+        ]
+      },
+      {
+        "id": "N10",
+        "query": "통상손해와 특별손해의 배상 범위가 문제된 판례",
+        "expected_terms": [
+          "통상손해",
+          "특별손해",
+          "배상",
+          "범위"
+        ],
+        "expected_articles": [
+          "민법_제393조"
+        ],
+        "status": 200,
+        "result_count": 10,
+        "top5_relevant_count": 1,
+        "latency_ms": 233.2,
+        "parsed_intent": {
+          "case_type": "civil",
+          "legal_domain": "damages",
+          "keywords": [
+            "통상손해와",
+            "특별손해의",
+            "배상",
+            "범위가",
+            "문제된"
+          ],
+          "legal_issue": "structured keyword search",
+          "inferred_articles": [],
+          "inferred_articles_validated": false,
+          "facts_summary": "통상손해와 특별손해의 배상 범위가 문제된 판례",
+          "confidence": 0.75,
+          "needs_clarification": false,
+          "clarification_question": null
+        },
+        "top_results": [
+          {
+            "rank": 1,
+            "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
+            "case_no": "2024다239364",
+            "case_name": "손해배상(기)[공인중개사가 부동산 중개 과정에서 임대차보증금 반환채무가 매수인에게 면책적으로 인수되지 않는다는 사정을 설명할 주의의무가 인정되는지 여부가 문제된 사건]",
+            "decision_date": "2024-09-12",
+            "score": 0.272,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 이 부분 사건을 울산지방법원에 환송한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 2,
+            "case_id": "766dadd3-3793-41ff-a0c9-715ae7813d19",
+            "case_no": "2024다215375, 215382",
+            "case_name": "손해배상(기)등·손해배상(기)[해외 파생상품시장거래에서 투자중개업자의 장중 반대매매를 정한 약관 조항의 효력과 적용 범위 및 투자중개업자의 선관주의의무 위반 여부 등이 문제된 사건]",
+            "decision_date": "2025-03-13",
+            "score": 0.271,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결의 본소 중 미수금 청구 부분 및 반소에 관한 부분을 파기하고, 이 부분 사건을 서울고등법원에 환송한다.",
+            "heuristic_relevant": true
+          },
+          {
+            "rank": 3,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "decision_date": "2024-07-11",
+            "score": 0.266,
+            "review_status": "auto_validated",
+            "cited_articles": [
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결을 파기하고, 사건을 제주지방법원에 환송한다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 4,
+            "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
+            "case_no": "2024가단100001",
+            "case_name": "손해배상(교통사고)",
+            "decision_date": "2024-05-10",
+            "score": 0.264,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제750조",
+              "민법_제396조"
+            ],
+            "summary_card": "피고 책임을 인정하고 원고 과실 30퍼센트를 반영하였다.",
+            "heuristic_relevant": false
+          },
+          {
+            "rank": 5,
+            "case_id": "80494bdf-ce3e-4dce-b38d-46b7a6347fdf",
+            "case_no": "2020다300299",
+            "case_name": "손해배상(기)[포괄임금계약의 최저임금법 위반 여부를 판단하는 방법이 문제된 사건]",
+            "decision_date": "2024-12-26",
+            "score": 0.241,
+            "review_status": "needs_review",
+            "cited_articles": [
+              "민법_제758조",
+              "민법_제750조"
+            ],
+            "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 사건을 서울고등법원에 환송한다.",
+            "heuristic_relevant": false
+          }
+        ]
+      }
+    ]
+  },
+  "compare": {
+    "metric": {
+      "base_case_count": 7,
+      "failures": 0,
+      "avg_material_fact_match": 0.7,
+      "avg_facts_vector_similarity": 0.512,
+      "avg_issue_similarity": 0.787,
+      "evidence_coverage_rate": 0.0,
+      "p95_latency_ms": 213.7
+    },
+    "rows": [
+      {
+        "base_case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
+        "status": 200,
+        "candidate_count": 5,
+        "latency_ms": 211.6,
+        "base_case": {
+          "case_id": "1c9d125f-dff1-41a6-ac46-64a2ac905416",
+          "case_no": "2024가단100001",
+          "summary_card": "손해배상(교통사고)",
+          "material_facts": {
+            "harm_type": "신체",
+            "claim_type": null,
+            "event_type": "교통사고",
+            "legal_domain": "손해배상",
+            "evidence_issue": false,
+            "causation_dispute": false,
+            "key_disputed_fact": null,
+            "negligence_dispute": true,
+            "outcome_disposition": "unknown",
+            "damage_scope_dispute": false
+          }
+        },
+        "top_candidates": [
+          {
+            "rank": 1,
+            "case_id": "45dd510b-4fd1-45d9-8798-ab2000891e33",
+            "case_no": "2019가합40778",
+            "case_name": "유류분반환",
+            "final_score": 0.548,
+            "facts_vector_similarity": 0.275,
+            "material_fact_match": 0.6,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 2,
+            "case_id": "78babfe6-e7f5-487a-9396-ff5080a64c92",
+            "case_no": "2022나9926",
+            "case_name": "구상금",
+            "final_score": 0.51,
+            "facts_vector_similarity": 0.549,
+            "material_fact_match": 0.7,
+            "issue_similarity": 0.2,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 3,
+            "case_id": "f4277356-9c24-4127-b508-f79e0ed7e9e3",
+            "case_no": "2016나2054092",
+            "case_name": "유류분반환청구의소",
+            "final_score": 0.496,
+            "facts_vector_similarity": 0.408,
+            "material_fact_match": 0.7,
+            "issue_similarity": 0.333,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 4,
+            "case_id": "7ccf051c-59bc-4169-9471-3fcb0ce160f7",
+            "case_no": "2017다261882",
+            "case_name": "구상금",
+            "final_score": 0.491,
+            "facts_vector_similarity": 0.496,
+            "material_fact_match": 0.7,
+            "issue_similarity": 0.333,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 5,
+            "case_id": "ead38b6e-bcb8-4682-9e86-da8a464ed448",
+            "case_no": "2023다280556",
+            "case_name": "횡령금반환의소",
+            "final_score": 0.491,
+            "facts_vector_similarity": 0.462,
+            "material_fact_match": 0.6,
+            "issue_similarity": 0.333,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          }
+        ]
+      },
+      {
+        "base_case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
+        "status": 200,
+        "candidate_count": 5,
+        "latency_ms": 212.7,
+        "base_case": {
+          "case_id": "72083798-a010-484f-92f8-73c2cb13afa4",
+          "case_no": "2019가단5248886",
+          "summary_card": "1. 피고는 원고에게 30,000,000원 및 이에 대하여 2019. 4. 25.부터 2020. 4. 21.까지는 연 5%의, 그 다음날부터 다 갚는 날까지는 연 12%의 각 비율로 계산한 돈을 지급하라. 2....",
+          "material_facts": {
+            "harm_type": "신체",
+            "claim_type": "손해배상",
+            "event_type": "교통사고",
+            "legal_domain": "손해배상",
+            "evidence_issue": false,
+            "causation_dispute": false,
+            "key_disputed_fact": "손해 범위와 손해액 산정",
+            "negligence_dispute": false,
+            "outcome_disposition": "기각",
+            "damage_scope_dispute": true
+          }
+        },
+        "top_candidates": [
+          {
+            "rank": 1,
+            "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
+            "case_no": "2020나60108",
+            "case_name": "구상금",
+            "final_score": 0.648,
+            "facts_vector_similarity": 0.77,
+            "material_fact_match": 0.9,
+            "issue_similarity": 0.333,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 2,
+            "case_id": "f0c29a26-9c55-42f5-ac06-965eff16ea6e",
+            "case_no": "2023나41651",
+            "case_name": "부당이득금",
+            "final_score": 0.624,
+            "facts_vector_similarity": 0.782,
+            "material_fact_match": 0.7,
+            "issue_similarity": 0.429,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 3,
+            "case_id": "f47b9011-97c6-4a06-b2ef-676d9b61f313",
+            "case_no": "2025가단75932",
+            "case_name": "구상금",
+            "final_score": 0.599,
+            "facts_vector_similarity": 0.636,
+            "material_fact_match": 0.6,
+            "issue_similarity": 1.0,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 4,
+            "case_id": "ef553b9c-c82d-458e-899a-75c8884f1256",
+            "case_no": "2018가합15638",
+            "case_name": "근로자지위확인등",
+            "final_score": 0.587,
+            "facts_vector_similarity": 0.513,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 5,
+            "case_id": "839018fb-9414-4afb-889f-421a906ae16b",
+            "case_no": "2021다220864",
+            "case_name": "구상금",
+            "final_score": 0.561,
+            "facts_vector_similarity": 0.818,
+            "material_fact_match": 0.8,
+            "issue_similarity": 0.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          }
+        ]
+      },
+      {
+        "base_case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
+        "status": 200,
+        "candidate_count": 5,
+        "latency_ms": 208.7,
+        "base_case": {
+          "case_id": "b9dffc39-c646-415d-ad71-4a605cd88634",
+          "case_no": "2020나62251",
+          "summary_card": "1. 당심에서의 확장된 청구를 포함하여 제1심 판결을 아래와 같이 변경한다. 가. 이 사건 소 중 2014. 10. 27.자 공시에 관한 자본시장과 금융투자업에 관한 법률 제162조에 따른 손해배상청구 부분을 ...",
+          "material_facts": {
+            "harm_type": "재산",
+            "claim_type": "손해배상",
+            "event_type": "공동불법행위",
+            "legal_domain": "손해배상",
+            "evidence_issue": true,
+            "causation_dispute": true,
+            "key_disputed_fact": "행위와 손해 사이의 상당인과관계",
+            "negligence_dispute": true,
+            "outcome_disposition": "일부 인용",
+            "damage_scope_dispute": true
+          }
+        },
+        "top_candidates": [
+          {
+            "rank": 1,
+            "case_id": "8e3597ce-b39c-4c5c-8b37-868b9cde7ecc",
+            "case_no": "2020나64837",
+            "case_name": "손해배상(기)",
+            "final_score": 0.84,
+            "facts_vector_similarity": 0.596,
+            "material_fact_match": 0.8,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 2,
+            "case_id": "3d127730-daac-45e1-ae23-260d84f5542c",
+            "case_no": "2022가합519467",
+            "case_name": "손해배상(기)",
+            "final_score": 0.82,
+            "facts_vector_similarity": 0.561,
+            "material_fact_match": 0.9,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 3,
+            "case_id": "4276e632-4af7-4c50-aaf9-120cf0935ecc",
+            "case_no": "2022가단5295059",
+            "case_name": "구상금",
+            "final_score": 0.812,
+            "facts_vector_similarity": 0.445,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 4,
+            "case_id": "d832ff59-4f62-4be0-8eae-3a55947bb90b",
+            "case_no": "2022가단5093918",
+            "case_name": "손해배상(기)",
+            "final_score": 0.811,
+            "facts_vector_similarity": 0.437,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 5,
+            "case_id": "50ed7644-4ba2-4165-b42b-a352c1d1f2e6",
+            "case_no": "2018나2289",
+            "case_name": "부정경쟁행위금지청구등의소",
+            "final_score": 0.808,
+            "facts_vector_similarity": 0.409,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          }
+        ]
+      },
+      {
+        "base_case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
+        "status": 200,
+        "candidate_count": 5,
+        "latency_ms": 209.6,
+        "base_case": {
+          "case_id": "fd661a4a-c991-47cf-ad15-c9b22f7cdc43",
+          "case_no": "2023나100002",
+          "summary_card": "손해배상(명예훼손)",
+          "material_facts": {
+            "harm_type": "정신",
+            "claim_type": null,
+            "event_type": "위자료",
+            "legal_domain": "unknown",
+            "evidence_issue": false,
+            "causation_dispute": false,
+            "key_disputed_fact": null,
+            "negligence_dispute": false,
+            "outcome_disposition": "unknown",
+            "damage_scope_dispute": false
+          }
+        },
+        "top_candidates": [
+          {
+            "rank": 1,
+            "case_id": "ff45d392-827a-4c80-a0ff-94fa803753f6",
+            "case_no": "2021르6860(본소), 2022르5482(반소)",
+            "case_name": "이혼및재산분할등·이혼등",
+            "final_score": 0.652,
+            "facts_vector_similarity": 0.391,
+            "material_fact_match": 0.9,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 2,
+            "case_id": "43d7ade5-0747-4e69-b7da-90d52a9687b5",
+            "case_no": "2021나16928",
+            "case_name": "손해배상(기)",
+            "final_score": 0.594,
+            "facts_vector_similarity": 0.337,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 3,
+            "case_id": "e1e99e10-b5ce-403d-836d-47f00e637997",
+            "case_no": "2018노1692",
+            "case_name": "사기·조세범처벌법위반·세무사법위반",
+            "final_score": 0.56,
+            "facts_vector_similarity": 0.293,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 4,
+            "case_id": "6e9ffa29-89fb-415c-b095-06ec3ecc592b",
+            "case_no": "2020나15554(본소), 2020나15561(반소)",
+            "case_name": "정산금등·정산금등",
+            "final_score": 0.53,
+            "facts_vector_similarity": 0.309,
+            "material_fact_match": 0.6,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 5,
+            "case_id": "a9ddcd74-2942-43c6-ab3b-4820c77d88fc",
+            "case_no": "2019르372",
+            "case_name": "이혼및위자료",
+            "final_score": 0.526,
+            "facts_vector_similarity": 0.363,
+            "material_fact_match": 0.6,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          }
+        ]
+      },
+      {
+        "base_case_id": "d95a8e66-380b-480e-b437-5ad441d6c609",
+        "status": 200,
+        "candidate_count": 5,
+        "latency_ms": 213.7,
+        "base_case": {
+          "case_id": "d95a8e66-380b-480e-b437-5ad441d6c609",
+          "case_no": "2017나2055054",
+          "summary_card": "1. 제1심 판결 중 별지 4 원고들목록의 ‘경품행사응모, 인정’ 란에 표기된 원고들(원고 122 포함) 및 같은 목록의 ‘FMC회원, 제3자제공미동의’ 란에 표기된 원고들(같은 목록의 ‘FMC회원, 사전필터링...",
+          "material_facts": {
+            "harm_type": "정신",
+            "claim_type": "손해배상",
+            "event_type": "위자료",
+            "legal_domain": "손해배상",
+            "evidence_issue": true,
+            "causation_dispute": true,
+            "key_disputed_fact": "행위와 손해 사이의 상당인과관계",
+            "negligence_dispute": true,
+            "outcome_disposition": "파기",
+            "damage_scope_dispute": true
+          }
+        },
+        "top_candidates": [
+          {
+            "rank": 1,
+            "case_id": "1cdb16c4-f825-4f30-8ab7-f92ead3bf852",
+            "case_no": "2020가합101417",
+            "case_name": "손해배상(기)",
+            "final_score": 0.769,
+            "facts_vector_similarity": 0.423,
+            "material_fact_match": 0.6,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 2,
+            "case_id": "c77ab6b5-bcd6-4e82-84eb-1facd74fac69",
+            "case_no": "2023다314022",
+            "case_name": "손해배상(기)[비법인사단의 대표자가 선량한 관리자의 주의의무를 위반한 경우, 비법인사단의 구성원에 대한 불법행위 손해배상책임의 성립 여부가 문제된 사건]",
+            "final_score": 0.761,
+            "facts_vector_similarity": 0.523,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 3,
+            "case_id": "b4824a9d-83f8-4144-b274-df32134c82e9",
+            "case_no": "2022나2009024",
+            "case_name": "차별구제청구등",
+            "final_score": 0.747,
+            "facts_vector_similarity": 0.575,
+            "material_fact_match": 0.5,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 4,
+            "case_id": "5efaf9c9-da9e-4c2d-a1c9-98ee8c0d6bbb",
+            "case_no": "2024나41282",
+            "case_name": "손해배상(기)",
+            "final_score": 0.744,
+            "facts_vector_similarity": 0.55,
+            "material_fact_match": 0.5,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 5,
+            "case_id": "3fc81087-58fa-4c41-a965-b8314e8cb6a2",
+            "case_no": "2022나2052639",
+            "case_name": "장애인차별중지등",
+            "final_score": 0.735,
+            "facts_vector_similarity": 0.474,
+            "material_fact_match": 0.5,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          }
+        ]
+      },
+      {
+        "base_case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
+        "status": 200,
+        "candidate_count": 5,
+        "latency_ms": 209.5,
+        "base_case": {
+          "case_id": "c57a37b4-b9f1-4312-9e96-4d0283bf39c0",
+          "case_no": "2020나60108",
+          "summary_card": "1. 피고들의 항소를 모두 기각한다. 2. 항소비용은 피고들이 부담한다. 2. 항소취지 제1심판결 중 피고들 각 패소 부분을 취소하고, 그 취소 부분에 해당하는 원고의 청구를 기각한다.",
+          "material_facts": {
+            "harm_type": "신체",
+            "claim_type": "손해배상",
+            "event_type": "교통사고",
+            "legal_domain": "손해배상",
+            "evidence_issue": false,
+            "causation_dispute": false,
+            "key_disputed_fact": "손해 범위와 손해액 산정",
+            "negligence_dispute": true,
+            "outcome_disposition": "기각",
+            "damage_scope_dispute": true
+          }
+        },
+        "top_candidates": [
+          {
+            "rank": 1,
+            "case_id": "dd05725c-761e-4db0-b1cf-4e5a6392ea2c",
+            "case_no": "2014가합62810",
+            "case_name": "손해배상(기)",
+            "final_score": 0.73,
+            "facts_vector_similarity": 0.477,
+            "material_fact_match": 0.7,
+            "issue_similarity": 0.6,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 2,
+            "case_id": "36a02e4f-beba-4977-a099-86bc0fc6689a",
+            "case_no": "2018가합75743",
+            "case_name": "손해배상(기)",
+            "final_score": 0.691,
+            "facts_vector_similarity": 0.479,
+            "material_fact_match": 0.9,
+            "issue_similarity": 0.6,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 3,
+            "case_id": "279da974-d0a5-4083-8f69-45fb791c84fa",
+            "case_no": "2018나58570",
+            "case_name": "손해배상(기)",
+            "final_score": 0.688,
+            "facts_vector_similarity": 0.465,
+            "material_fact_match": 0.6,
+            "issue_similarity": 0.6,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 4,
+            "case_id": "302b8106-da98-4315-b667-b85a6d05bc97",
+            "case_no": "2021가단557753",
+            "case_name": "구상금",
+            "final_score": 0.678,
+            "facts_vector_similarity": 0.515,
+            "material_fact_match": 0.7,
+            "issue_similarity": 0.2,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 5,
+            "case_id": "3fc81087-58fa-4c41-a965-b8314e8cb6a2",
+            "case_no": "2022나2052639",
+            "case_name": "장애인차별중지등",
+            "final_score": 0.66,
+            "facts_vector_similarity": 0.479,
+            "material_fact_match": 0.6,
+            "issue_similarity": 0.6,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          }
+        ]
+      },
+      {
+        "base_case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
+        "status": 200,
+        "candidate_count": 5,
+        "latency_ms": 212.9,
+        "base_case": {
+          "case_id": "b33805ae-e911-47df-b8c6-e3cb70948a35",
+          "case_no": "2024다239364",
+          "summary_card": "원심판결 중 피고들 패소 부분을 파기하고, 이 부분 사건을 울산지방법원에 환송한다.",
+          "material_facts": {
+            "harm_type": "재산",
+            "claim_type": "손해배상",
+            "event_type": "공동불법행위",
+            "legal_domain": "손해배상",
+            "evidence_issue": false,
+            "causation_dispute": false,
+            "key_disputed_fact": null,
+            "negligence_dispute": true,
+            "outcome_disposition": "파기",
+            "damage_scope_dispute": false
+          }
+        },
+        "top_candidates": [
+          {
+            "rank": 1,
+            "case_id": "1dd407e9-72f9-4b97-9c2e-454dde3e12f2",
+            "case_no": "2016다34007",
+            "case_name": "소유권말소등기",
+            "final_score": 0.895,
+            "facts_vector_similarity": 0.724,
+            "material_fact_match": 0.9,
+            "issue_similarity": 1.0,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 2,
+            "case_id": "766dadd3-3793-41ff-a0c9-715ae7813d19",
+            "case_no": "2024다215375, 215382",
+            "case_name": "손해배상(기)등·손해배상(기)[해외 파생상품시장거래에서 투자중개업자의 장중 반대매매를 정한 약관 조항의 효력과 적용 범위 및 투자중개업자의 선관주의의무 위반 여부 등이 문제된 사건]",
+            "final_score": 0.833,
+            "facts_vector_similarity": 0.538,
+            "material_fact_match": 0.8,
+            "issue_similarity": 1.0,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 3,
+            "case_id": "9999030f-47a5-428e-838c-43be98f37304",
+            "case_no": "2020다208997",
+            "case_name": "손해배상(기)",
+            "final_score": 0.815,
+            "facts_vector_similarity": 0.718,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 4,
+            "case_id": "9761b407-1754-4469-8731-1bd00c760d01",
+            "case_no": "2025나10683",
+            "case_name": "채무부존재확인",
+            "final_score": 0.808,
+            "facts_vector_similarity": 0.578,
+            "material_fact_match": 0.8,
+            "issue_similarity": 1.0,
+            "outcome_difference": 0.0,
+            "evidence_count": 0
+          },
+          {
+            "rank": 5,
+            "case_id": "ead38b6e-bcb8-4682-9e86-da8a464ed448",
+            "case_no": "2023다280556",
+            "case_name": "횡령금반환의소",
+            "final_score": 0.796,
+            "facts_vector_similarity": 0.565,
+            "material_fact_match": 0.7,
+            "issue_similarity": 1.0,
+            "outcome_difference": 1.0,
+            "evidence_count": 0
+          }
+        ]
+      }
+    ]
+  },
+  "db_snapshot": {
+    "cases": 221,
+    "paragraphs": 35470,
+    "structures": 226,
+    "embeddings": 1034,
+    "review_status": {
+      "auto_validated": 52,
+      "needs_review": 174
+    },
+    "needs_review_rate": 0.77
+  }
+}
