@@ -63,7 +63,7 @@ class FakeCaseDetailRepository:
                 material_facts={"negligence_offset_issue": True, "victim_fault": False},
                 outcome={"disposition": "partially accepted", "key_factor": "negligence"},
                 cited_articles=["civil_act_750"],
-                facets={"legal_domain": "damages"},
+                facets={"primary_domain": "damages", "issue_tags": ["negligence", "causation"]},
                 evidence_spans={"facts": ["p12"], "outcome": ["p18"]},
                 confidence_score=0.82,
                 review_status="pending",
@@ -76,7 +76,7 @@ class FakeCaseDetailRepository:
                 material_facts={"negligence_offset_issue": True, "victim_fault": True},
                 outcome={"disposition": "partially accepted", "key_factor": "victim fault"},
                 cited_articles=["civil_act_750"],
-                facets={"legal_domain": "damages"},
+                facets={"primary_domain": "damages", "issue_tags": ["negligence", "causation"]},
                 evidence_spans={"facts": ["p08"], "reasoning": ["p17"]},
                 confidence_score=0.84,
                 review_status="pending",
@@ -142,7 +142,7 @@ class FakeCaseDetailRepository:
                 material_facts={"negligence_offset_issue": True},
                 outcome={"disposition": "partially accepted", "key_factor": "victim fault"},
                 cited_articles=["civil_act_750"],
-                facets={"legal_domain": "damages"},
+                facets={"primary_domain": "damages", "issue_tags": ["negligence", "causation"]},
                 evidence_spans={"facts": [{"paragraph_id": "P001"}], "reasoning": [{"paragraph_id": "P0017"}]},
                 confidence_score=0.84,
             ),
@@ -159,7 +159,7 @@ class FakeCaseDetailRepository:
                 material_facts={"negligence_offset_issue": False},
                 outcome={"disposition": "dismissed", "key_factor": "contract"},
                 cited_articles=["civil_act_390"],
-                facets={"legal_domain": "contract"},
+                facets={"primary_domain": "contract", "issue_tags": []},
                 evidence_spans={"reasoning": ["p04"]},
                 confidence_score=0.7,
             ),
@@ -298,6 +298,11 @@ def test_get_compare_candidates_returns_ranked_candidates() -> None:
     assert body["ranking_policy"]["outcome_difference_weight"] == 0.03
     assert body["candidates"][0]["case_no"] == "2020Da4321"
     assert body["candidates"][0]["scores"]["final_score"] > body["candidates"][1]["scores"]["final_score"]
+    assert body["candidates"][0]["scores"]["domain_match_score"] == 1.0
+    assert body["candidates"][0]["scores"]["issue_tag_overlap"] == 1.0
+    assert "same primary legal domain: damages" in body["candidates"][0]["match_reasons"]
+    assert "shared issue tags: causation, negligence" in body["candidates"][0]["match_reasons"]
+    assert body["candidates"][0]["caution_reasons"] == []
     assert body["candidates"][0]["common_facts"] == ["negligence_offset_issue: True"]
     assert body["candidates"][0]["evidence_ids"] == ["P0001", "P0017"]
 
@@ -336,6 +341,8 @@ def test_compare_cases_returns_structured_fallback_analysis() -> None:
     assert body["analysis"]["generated_by"] == "structured_fallback"
     assert body["analysis"]["fallback_used"] is True
     assert body["analysis"]["common_points"][0]["evidence_ids"]["base"] == ["p12", "p18"]
+    assert any("legal domain `damages`" in item["text"] for item in body["analysis"]["common_points"])
+    assert any("issue tags" in item["text"] for item in body["analysis"]["common_points"])
     assert body["analysis"]["material_differences"][0]["factor"] == "victim_fault"
     assert body["evidence_links"]["base"][0]["evidence_id"] == "p12"
     assert body["evidence_links"]["compare"][0]["evidence_id"] == "p08"

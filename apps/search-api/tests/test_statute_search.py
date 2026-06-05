@@ -52,6 +52,12 @@ class FakeStatuteRepository:
                 facts="전방주시 의무 위반이 문제된 사안입니다.",
                 conclusion="원고의 청구를 일부 인용했습니다.",
                 outcome={"disposition": "일부 인용", "direction": "원고 일부 유리"},
+                facets={
+                    "primary_domain": "damages",
+                    "secondary_domains": [],
+                    "issue_tags": ["negligence"],
+                    "mvp_relevance": "mvp_relevant",
+                },
                 evidence_spans={"facts": [{"paragraph_id": "P001"}], "reasoning": ["p18"]},
                 review_status="pending",
                 confidence_score=0.82,
@@ -70,10 +76,16 @@ class FakeStatuteRepository:
                 case_type="civil",
                 legal_domain="damages",
                 source_url="https://www.law.go.kr/precInfoP.do?precSeq=000000",
-                cited_articles=["civil_act_750"],
+                cited_articles=["민법_제750조"],
                 facts="traffic accident victim negligence damages",
                 conclusion="The claim was partially accepted.",
                 outcome={"disposition": "partially accepted", "key_factor": "negligence"},
+                facets={
+                    "primary_domain": "damages",
+                    "secondary_domains": [],
+                    "issue_tags": ["negligence"],
+                    "mvp_relevance": "mvp_relevant",
+                },
                 evidence_spans={"facts": ["p12"], "reasoning": ["p18"]},
                 review_status="pending",
                 confidence_score=0.82,
@@ -92,9 +104,39 @@ class FakeStatuteRepository:
                 facts="contract payment dispute",
                 conclusion="The claim was dismissed.",
                 outcome={"disposition": "dismissed"},
+                facets={
+                    "primary_domain": "contract",
+                    "secondary_domains": [],
+                    "issue_tags": [],
+                    "mvp_relevance": "out_of_scope",
+                },
                 evidence_spans={"facts": ["p01"]},
                 review_status="pending",
                 confidence_score=0.7,
+            ),
+            CaseSearchRow(
+                case_id="33333333-3333-3333-3333-333333333333",
+                case_no="2021??2222",
+                court_name="District Court",
+                court_level="district",
+                decision_date=date(2021, 2, 2),
+                case_name="Damages with contract issue",
+                case_type="civil",
+                legal_domain="damages",
+                source_url=None,
+                cited_articles=[],
+                facts="contract payment dispute with incidental damages",
+                conclusion="The claim was partially accepted.",
+                outcome={"disposition": "partially accepted"},
+                facets={
+                    "primary_domain": "damages",
+                    "secondary_domains": ["contract"],
+                    "issue_tags": [],
+                    "mvp_relevance": "mvp_relevant",
+                },
+                evidence_spans={"facts": ["p02"]},
+                review_status="pending",
+                confidence_score=0.82,
             ),
         ]
 
@@ -104,6 +146,7 @@ class FakeStatuteRepository:
         return {
             "11111111-1111-1111-1111-111111111111": 0.9,
             "22222222-2222-2222-2222-222222222222": 0.1,
+            "33333333-3333-3333-3333-333333333333": 0.9,
         }
 
     def evidence_snippets_for_cases(
@@ -144,6 +187,15 @@ class FakeStatuteRepository:
                     text="Contract evidence paragraph.",
                 ),
             ],
+            "33333333-3333-3333-3333-333333333333": [
+                SearchEvidenceRecord(
+                    case_id="33333333-3333-3333-3333-333333333333",
+                    evidence_id="p02",
+                    section_type="facts",
+                    paragraph_order=2,
+                    text="Secondary contract evidence paragraph.",
+                ),
+            ],
         }
         return {
             case_id: [
@@ -177,6 +229,8 @@ def test_search_statute_returns_contract_shape() -> None:
     assert body["query"]["article_validated"] is True
     assert body["pagination"]["total"] == 1
     assert body["results"][0]["case_no"] == "2021다12345"
+    assert body["results"][0]["primary_domain"] == "damages"
+    assert body["results"][0]["mvp_relevance"] == "mvp_relevant"
     assert body["results"][0]["evidence_ids"] == ["P0001", "p18"]
     assert body["results"][0]["evidence_snippets"][0]["evidence_id"] == "P0001"
     assert body["results"][0]["evidence_snippets"][0]["text"] == "Driver negligence evidence paragraph."
@@ -235,7 +289,29 @@ def test_search_natural_returns_parsed_intent_and_ranked_results() -> None:
     assert body["search_method"] == "structured_fallback"
     assert body["parsed_intent"]["legal_domain"] == "damages"
     assert body["parsed_intent"]["confidence"] > 0.5
-    assert body["pagination"]["total"] == 2
+    assert body["pagination"]["total"] == 3
     assert body["results"][0]["case_no"] == "2021??2345"
     assert body["results"][0]["evidence_ids"] == ["p12", "p18"]
     assert body["results"][0]["evidence_snippets"][1]["evidence_id"] == "p18"
+
+
+def test_search_natural_uses_general_domain_intent() -> None:
+    settings.embedding_provider = "local"
+    settings.embedding_model = "local-hash-embedding-v1"
+    app.dependency_overrides[get_statute_search_service] = override_statute_search_service
+    client = TestClient(app)
+
+    try:
+        response = client.post(
+            "/api/v1/search/natural",
+            json={"query": "contract payment dispute", "page": 1, "size": 10},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["parsed_intent"]["legal_domain"] == "contract"
+    assert body["results"][0]["primary_domain"] == "contract"
+    assert body["results"][1]["primary_domain"] == "damages"
+    assert "contract" in body["results"][1]["secondary_domains"]

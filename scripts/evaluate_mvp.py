@@ -40,6 +40,7 @@ class NaturalEvalCase:
     expected_terms: list[str]
     expected_articles: list[str]
     intent: str
+    expected_domain: str | None = None
 
 
 STATUTE_CASES = [
@@ -130,6 +131,60 @@ NATURAL_CASES = [
 ]
 
 
+NATURAL_CASES.extend(
+    [
+        NaturalEvalCase(
+            "G01",
+            "임대차보증금 반환이 문제된 판례",
+            ["임대차", "보증금", "반환"],
+            [],
+            "임대차보증금 반환",
+            "lease",
+        ),
+        NaturalEvalCase(
+            "G02",
+            "계약대금 지급과 채무불이행이 문제된 판례",
+            ["계약", "대금", "채무불이행"],
+            [],
+            "계약대금 채무불이행",
+            "contract",
+        ),
+        NaturalEvalCase(
+            "G03",
+            "부당이득 반환청구 판례",
+            ["부당이득", "반환", "청구"],
+            [],
+            "부당이득 반환",
+            "unjust_enrichment",
+        ),
+        NaturalEvalCase(
+            "G04",
+            "근로자 임금 퇴직금 청구 판례",
+            ["근로자", "임금", "퇴직금"],
+            [],
+            "노동 임금 퇴직금",
+            "labor",
+        ),
+        NaturalEvalCase(
+            "G05",
+            "상속재산 분할과 유류분 반환이 문제된 판례",
+            ["상속", "유류분", "반환"],
+            [],
+            "상속 유류분",
+            "inheritance",
+        ),
+        NaturalEvalCase(
+            "G06",
+            "취득세 부과처분 취소 판례",
+            ["취득세", "부과처분", "취소"],
+            [],
+            "조세 취득세 부과처분",
+            "tax",
+        ),
+    ]
+)
+
+
 def post_json(client: TestClient, path: str, payload: dict[str, Any]) -> tuple[int, dict[str, Any], float]:
     started = perf_counter()
     response = client.post(path, json=payload)
@@ -158,6 +213,9 @@ def result_text(result: dict[str, Any]) -> str:
         result.get("case_no", ""),
         result.get("case_name", ""),
         result.get("summary_card", ""),
+        result.get("primary_domain", ""),
+        " ".join(result.get("secondary_domains", [])),
+        " ".join(result.get("issue_tags", [])),
         " ".join(result.get("cited_articles", [])),
         json.dumps(result.get("outcome", {}), ensure_ascii=False),
         snippets,
@@ -171,6 +229,17 @@ def is_natural_relevant(result: dict[str, Any], case: NaturalEvalCase) -> bool:
     term_hits = sum(1 for term in case.expected_terms if term.lower() in text)
     required_hits = 1 if len(case.expected_terms) <= 2 else 2
     return article_hit or term_hits >= required_hits
+
+
+def is_mvp_relevant_result(result: dict[str, Any]) -> bool:
+    return result.get("mvp_relevance") == "mvp_relevant"
+
+
+def is_domain_relevant_result(result: dict[str, Any], case: NaturalEvalCase) -> bool:
+    if not case.expected_domain:
+        return True
+    secondary = result.get("secondary_domains", [])
+    return result.get("primary_domain") == case.expected_domain or case.expected_domain in secondary
 
 
 def evaluate_statute(client: TestClient, size: int) -> dict[str, Any]:
@@ -236,6 +305,8 @@ def evaluate_natural(client: TestClient, size: int) -> dict[str, Any]:
     rows = []
     latencies = []
     relevant_counts = []
+    mvp_relevant_counts = []
+    domain_relevant_counts = []
     failures = 0
     base_case_ids: list[str] = []
 
@@ -248,8 +319,14 @@ def evaluate_natural(client: TestClient, size: int) -> dict[str, Any]:
         latencies.append(elapsed_ms)
         results = body.get("results", []) if status == 200 else []
         relevance = [is_natural_relevant(result, case) for result in results[:5]]
+        mvp_relevance = [is_mvp_relevant_result(result) for result in results[:5]]
+        domain_relevance = [is_domain_relevant_result(result, case) for result in results[:5]]
         relevant_count = sum(1 for value in relevance if value)
+        mvp_relevant_count = sum(1 for value in mvp_relevance if value)
+        domain_relevant_count = sum(1 for value in domain_relevance if value)
         relevant_counts.append(relevant_count)
+        mvp_relevant_counts.append(mvp_relevant_count)
+        domain_relevant_counts.append(domain_relevant_count)
         if status != 200:
             failures += 1
         if results:
@@ -260,9 +337,12 @@ def evaluate_natural(client: TestClient, size: int) -> dict[str, Any]:
                 "query": case.query,
                 "expected_terms": case.expected_terms,
                 "expected_articles": case.expected_articles,
+                "expected_domain": case.expected_domain,
                 "status": status,
                 "result_count": len(results),
                 "top5_relevant_count": relevant_count,
+                "top5_mvp_relevant_count": mvp_relevant_count,
+                "top5_domain_relevant_count": domain_relevant_count,
                 "latency_ms": round(elapsed_ms, 1),
                 "parsed_intent": body.get("parsed_intent"),
                 "top_results": compact_results(results[:5], relevance),
@@ -275,6 +355,12 @@ def evaluate_natural(client: TestClient, size: int) -> dict[str, Any]:
             "failures": failures,
             "avg_top5_relevant_count": round(statistics.mean(relevant_counts), 3)
             if relevant_counts
+            else 0.0,
+            "avg_top5_mvp_relevant_count": round(statistics.mean(mvp_relevant_counts), 3)
+            if mvp_relevant_counts
+            else 0.0,
+            "avg_top5_domain_relevant_count": round(statistics.mean(domain_relevant_counts), 3)
+            if domain_relevant_counts
             else 0.0,
             "p95_latency_ms": percentile(latencies, 95),
         },
@@ -289,6 +375,8 @@ def evaluate_compare(client: TestClient, base_case_ids: list[str], limit: int) -
     material_scores: list[float] = []
     fact_scores: list[float] = []
     issue_scores: list[float] = []
+    domain_scores: list[float] = []
+    issue_tag_scores: list[float] = []
     evidence_covered = 0
     candidate_total = 0
     failures = 0
@@ -307,6 +395,8 @@ def evaluate_compare(client: TestClient, base_case_ids: list[str], limit: int) -
             material_scores.append(float(scores.get("material_fact_match", 0.0)))
             fact_scores.append(float(scores.get("facts_vector_similarity", 0.0)))
             issue_scores.append(float(scores.get("issue_similarity", 0.0)))
+            domain_scores.append(float(scores.get("domain_match_score", 0.0)))
+            issue_tag_scores.append(float(scores.get("issue_tag_overlap", 0.0)))
             candidate_total += 1
             if candidate.get("evidence_ids"):
                 evidence_covered += 1
@@ -328,6 +418,8 @@ def evaluate_compare(client: TestClient, base_case_ids: list[str], limit: int) -
             "avg_material_fact_match": rounded_mean(material_scores),
             "avg_facts_vector_similarity": rounded_mean(fact_scores),
             "avg_issue_similarity": rounded_mean(issue_scores),
+            "avg_domain_match_score": rounded_mean(domain_scores),
+            "avg_issue_tag_overlap": rounded_mean(issue_tag_scores),
             "evidence_coverage_rate": round(evidence_covered / candidate_total, 3)
             if candidate_total
             else 0.0,
@@ -341,17 +433,94 @@ def db_quality_snapshot() -> dict[str, Any]:
     with engine.connect() as connection:
         cases = connection.exec_driver_sql("select count(*) from cases").scalar_one()
         paragraphs = connection.exec_driver_sql("select count(*) from case_paragraphs").scalar_one()
-        structures = connection.exec_driver_sql("select count(*) from case_structures").scalar_one()
+        structures = connection.exec_driver_sql(
+            """
+            select count(*)
+            from (
+              select distinct on (case_id) id
+              from case_structures
+              order by case_id, (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc, processed_at desc
+            ) latest_structures
+            """
+        ).scalar_one()
         embeddings = connection.exec_driver_sql("select count(*) from case_embeddings").scalar_one()
         review_rows = connection.exec_driver_sql(
             """
             select review_status, count(*)
-            from case_structures
+            from (
+              select distinct on (case_id) *
+              from case_structures
+              order by case_id, (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc, processed_at desc
+            ) case_structures
             group by review_status
             order by review_status
             """
         ).all()
+        category_rows = connection.exec_driver_sql(
+            """
+            select category, count(*)
+            from (
+              select distinct on (case_id) *
+              from case_structures
+              order by case_id, (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc, processed_at desc
+            ) case_structures
+            cross join lateral jsonb_array_elements_text(
+              coalesce(evidence_spans->'validation'->'categories', '[]'::jsonb)
+            ) as category
+            group by category
+            order by category
+            """
+        ).all()
+        primary_category_rows = connection.exec_driver_sql(
+            """
+            select
+              coalesce(
+                jsonb_extract_path_text(evidence_spans, 'validation', 'primary_category'),
+                'auto_validated'
+              ) as category,
+              count(*)
+            from (
+              select distinct on (case_id) *
+              from case_structures
+              order by case_id, (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc, processed_at desc
+            ) case_structures
+            group by category
+            order by category
+            """
+        ).all()
+        mvp_relevance_rows = connection.exec_driver_sql(
+            """
+            select
+              coalesce(jsonb_extract_path_text(facets, 'mvp_relevance'), 'unknown') as relevance,
+              count(*)
+            from (
+              select distinct on (case_id) *
+              from case_structures
+              order by case_id, (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc, processed_at desc
+            ) case_structures
+            group by relevance
+            order by relevance
+            """
+        ).all()
+        domain_rows = connection.exec_driver_sql(
+            """
+            select
+              coalesce(jsonb_extract_path_text(facets, 'primary_domain'), 'unknown') as domain,
+              count(*)
+            from (
+              select distinct on (case_id) *
+              from case_structures
+              order by case_id, (jsonb_extract_path_text(facets, 'primary_domain') is not null) desc, processed_at desc
+            ) case_structures
+            group by domain
+            order by count(*) desc
+            """
+        ).all()
     review_counts = {row[0]: row[1] for row in review_rows}
+    category_counts = {row[0]: row[1] for row in category_rows}
+    primary_category_counts = {row[0]: row[1] for row in primary_category_rows}
+    mvp_relevance_counts = {row[0]: row[1] for row in mvp_relevance_rows}
+    domain_counts = {row[0]: row[1] for row in domain_rows}
     total_reviewed = sum(review_counts.values())
     return {
         "cases": cases,
@@ -359,9 +528,24 @@ def db_quality_snapshot() -> dict[str, Any]:
         "structures": structures,
         "embeddings": embeddings,
         "review_status": review_counts,
+        "review_categories": category_counts,
+        "primary_review_categories": primary_category_counts,
+        "mvp_relevance": mvp_relevance_counts,
+        "primary_domains": domain_counts,
         "needs_review_rate": round(review_counts.get("needs_review", 0) / total_reviewed, 3)
         if total_reviewed
         else 0.0,
+        "true_quality_issue_rate": category_rate(category_counts, "quality_issue", total_reviewed),
+        "missing_scope_rate": category_rate(category_counts, "missing_scope", total_reviewed),
+        "out_of_scope_rate": category_rate(category_counts, "out_of_scope", total_reviewed),
+        "low_confidence_rate": category_rate(category_counts, "low_confidence", total_reviewed),
+        "primary_quality_issue_rate": category_rate(primary_category_counts, "quality_issue", total_reviewed),
+        "primary_missing_scope_rate": category_rate(primary_category_counts, "missing_scope", total_reviewed),
+        "primary_out_of_scope_rate": category_rate(primary_category_counts, "out_of_scope", total_reviewed),
+        "primary_low_confidence_rate": category_rate(primary_category_counts, "low_confidence", total_reviewed),
+        "mvp_relevant_rate": category_rate(mvp_relevance_counts, "mvp_relevant", total_reviewed),
+        "weakly_related_rate": category_rate(mvp_relevance_counts, "weakly_related", total_reviewed),
+        "out_of_scope_relevance_rate": category_rate(mvp_relevance_counts, "out_of_scope", total_reviewed),
     }
 
 
@@ -376,6 +560,10 @@ def compact_results(results: list[dict[str, Any]], relevance: list[bool] | None 
             "decision_date": result.get("decision_date"),
             "score": result.get("score"),
             "review_status": result.get("review_status"),
+            "primary_domain": result.get("primary_domain"),
+            "secondary_domains": result.get("secondary_domains", []),
+            "issue_tags": result.get("issue_tags", []),
+            "mvp_relevance": result.get("mvp_relevance"),
             "cited_articles": result.get("cited_articles", []),
             "summary_card": result.get("summary_card", ""),
         }
@@ -399,7 +587,11 @@ def compact_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]
                 "facts_vector_similarity": scores.get("facts_vector_similarity"),
                 "material_fact_match": scores.get("material_fact_match"),
                 "issue_similarity": scores.get("issue_similarity"),
+                "domain_match_score": scores.get("domain_match_score"),
+                "issue_tag_overlap": scores.get("issue_tag_overlap"),
                 "outcome_difference": scores.get("outcome_difference"),
+                "match_reasons": candidate.get("match_reasons", []),
+                "caution_reasons": candidate.get("caution_reasons", []),
                 "evidence_count": len(candidate.get("evidence_ids", [])),
             }
         )
@@ -419,6 +611,10 @@ def unique(values: list[str]) -> list[str]:
 
 def rounded_mean(values: list[float]) -> float:
     return round(statistics.mean(values), 3) if values else 0.0
+
+
+def category_rate(category_counts: dict[str, int], category: str, total: int) -> float:
+    return round(category_counts.get(category, 0) / total, 3) if total else 0.0
 
 
 def percentile(values: list[float], pct: int) -> float:
@@ -455,9 +651,24 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"| Statute search | in-scope precision@10 | {statute['in_scope_precision_at_10']} |",
         f"| Statute search | top1 exact article rate | {statute['top1_exact_article_rate']} |",
         f"| Natural search | avg Top-5 relevant count | {natural['avg_top5_relevant_count']} |",
+        f"| Natural search | avg Top-5 MVP relevant count | {natural['avg_top5_mvp_relevant_count']} |",
+        f"| Natural search | avg Top-5 domain relevant count | {natural['avg_top5_domain_relevant_count']} |",
         f"| Compare candidates | avg material fact match | {compare['avg_material_fact_match']} |",
+        f"| Compare candidates | avg domain match score | {compare['avg_domain_match_score']} |",
+        f"| Compare candidates | avg issue tag overlap | {compare['avg_issue_tag_overlap']} |",
         f"| Compare candidates | evidence coverage rate | {compare['evidence_coverage_rate']} |",
         f"| Structure validation | needs_review rate | {db['needs_review_rate']} |",
+        f"| Structure validation | true quality issue rate | {db['true_quality_issue_rate']} |",
+        f"| Structure validation | missing scope rate | {db['missing_scope_rate']} |",
+        f"| Structure validation | out-of-scope rate | {db['out_of_scope_rate']} |",
+        f"| Structure validation | low confidence rate | {db['low_confidence_rate']} |",
+        f"| Structure validation | primary quality issue rate | {db['primary_quality_issue_rate']} |",
+        f"| Structure validation | primary missing scope rate | {db['primary_missing_scope_rate']} |",
+        f"| Structure validation | primary out-of-scope rate | {db['primary_out_of_scope_rate']} |",
+        f"| Structure validation | primary low confidence rate | {db['primary_low_confidence_rate']} |",
+        f"| MVP relevance | mvp_relevant rate | {db['mvp_relevant_rate']} |",
+        f"| MVP relevance | weakly_related rate | {db['weakly_related_rate']} |",
+        f"| MVP relevance | out_of_scope rate | {db['out_of_scope_relevance_rate']} |",
         "",
         "## DB Snapshot",
         "",
@@ -466,6 +677,10 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"- Structures: {db['structures']}",
         f"- Embeddings: {db['embeddings']}",
         f"- Review status: `{json.dumps(db['review_status'], ensure_ascii=False)}`",
+        f"- Review categories: `{json.dumps(db['review_categories'], ensure_ascii=False)}`",
+        f"- Primary review categories: `{json.dumps(db['primary_review_categories'], ensure_ascii=False)}`",
+        f"- MVP relevance: `{json.dumps(db['mvp_relevance'], ensure_ascii=False)}`",
+        f"- Primary domains: `{json.dumps(db['primary_domains'], ensure_ascii=False)}`",
         "",
         "## Statute Search",
         "",
@@ -492,19 +707,31 @@ def markdown_report(report: dict[str, Any]) -> str:
             "",
             "## Natural Search",
             "",
-            "| ID | Query | Status | Top-5 Relevant | Top Result |",
-            "|----|-------|--------|----------------|------------|",
+            "| ID | Query | Expected Domain | Status | Top-5 Relevant | Top Result | Top Domain |",
+            "|----|-------|-----------------|--------|----------------|------------|------------|",
         ]
     )
     for row in report["natural"]["rows"]:
         top = row["top_results"][0] if row["top_results"] else {}
         lines.append(
-            "| {id} | {query} | {status} | {count} | {top} |".format(
+            "| {id} | {query} | {domain} | {status} | {count} | {top} | {top_domain} |".format(
                 id=row["id"],
                 query=md_escape(row["query"]),
+                domain=row.get("expected_domain") or "",
                 status=row["status"],
-                count=row["top5_relevant_count"],
+                count=(
+                    f"{row['top5_relevant_count']} / MVP {row['top5_mvp_relevant_count']}"
+                    f" / Domain {row['top5_domain_relevant_count']}"
+                ),
                 top=md_escape(top.get("case_no", "")),
+                top_domain=md_escape(
+                    " / ".join(
+                        [
+                            str(top.get("primary_domain") or ""),
+                            ",".join(top.get("secondary_domains", [])),
+                        ]
+                    ).strip(" /")
+                ),
             )
         )
 
@@ -513,19 +740,21 @@ def markdown_report(report: dict[str, Any]) -> str:
             "",
             "## Compare Candidates",
             "",
-            "| Base Case | Status | Candidates | Top Candidate | Top Material Match |",
-            "|-----------|--------|------------|---------------|--------------------|",
+            "| Base Case | Status | Candidates | Top Candidate | Top Material Match | Domain Match | Issue Tags |",
+            "|-----------|--------|------------|---------------|--------------------|--------------|------------|",
         ]
     )
     for row in report["compare"]["rows"]:
         top = row["top_candidates"][0] if row["top_candidates"] else {}
         lines.append(
-            "| {base} | {status} | {count} | {top} | {material} |".format(
+            "| {base} | {status} | {count} | {top} | {material} | {domain} | {issue_tags} |".format(
                 base=row["base_case_id"],
                 status=row["status"],
                 count=row["candidate_count"],
                 top=md_escape(top.get("case_no", "")),
                 material=top.get("material_fact_match", ""),
+                domain=top.get("domain_match_score", ""),
+                issue_tags=top.get("issue_tag_overlap", ""),
             )
         )
 
@@ -579,8 +808,23 @@ def main() -> int:
             "statute_precision_at_10": report["statute"]["metric"]["precision_at_10"],
             "statute_in_scope_precision_at_10": report["statute"]["metric"]["in_scope_precision_at_10"],
             "natural_avg_top5_relevant_count": report["natural"]["metric"]["avg_top5_relevant_count"],
+            "natural_avg_top5_mvp_relevant_count": report["natural"]["metric"]["avg_top5_mvp_relevant_count"],
+            "natural_avg_top5_domain_relevant_count": report["natural"]["metric"]["avg_top5_domain_relevant_count"],
             "compare_avg_material_fact_match": report["compare"]["metric"]["avg_material_fact_match"],
+            "compare_avg_domain_match_score": report["compare"]["metric"]["avg_domain_match_score"],
+            "compare_avg_issue_tag_overlap": report["compare"]["metric"]["avg_issue_tag_overlap"],
             "needs_review_rate": report["db_snapshot"]["needs_review_rate"],
+            "true_quality_issue_rate": report["db_snapshot"]["true_quality_issue_rate"],
+            "missing_scope_rate": report["db_snapshot"]["missing_scope_rate"],
+            "out_of_scope_rate": report["db_snapshot"]["out_of_scope_rate"],
+            "low_confidence_rate": report["db_snapshot"]["low_confidence_rate"],
+            "primary_quality_issue_rate": report["db_snapshot"]["primary_quality_issue_rate"],
+            "primary_missing_scope_rate": report["db_snapshot"]["primary_missing_scope_rate"],
+            "primary_out_of_scope_rate": report["db_snapshot"]["primary_out_of_scope_rate"],
+            "primary_low_confidence_rate": report["db_snapshot"]["primary_low_confidence_rate"],
+            "mvp_relevant_rate": report["db_snapshot"]["mvp_relevant_rate"],
+            "weakly_related_rate": report["db_snapshot"]["weakly_related_rate"],
+            "out_of_scope_relevance_rate": report["db_snapshot"]["out_of_scope_relevance_rate"],
         },
     }, ensure_ascii=False, indent=2))
     return 0

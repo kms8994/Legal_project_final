@@ -9,6 +9,8 @@ class ValidationResult:
     review_status: str
     confidence_score: float
     reasons: list[str]
+    categories: list[str]
+    primary_category: str | None
     is_valid: bool
 
 
@@ -58,11 +60,15 @@ def validate_structure(
         reasons.append("confidence_below_threshold")
 
     unique_reasons = dedupe(reasons)
+    categories = classify_review_reasons(unique_reasons)
+    primary_category = choose_primary_category(categories, facets)
     if not unique_reasons:
         return ValidationResult(
             review_status="auto_validated",
             confidence_score=round(adjusted_confidence, 3),
             reasons=[],
+            categories=[],
+            primary_category=None,
             is_valid=True,
         )
 
@@ -73,8 +79,61 @@ def validate_structure(
         review_status=status,
         confidence_score=round(adjusted_confidence, 3),
         reasons=unique_reasons,
+        categories=categories,
+        primary_category=primary_category,
         is_valid=False,
     )
+
+
+def classify_review_reasons(reasons: list[str]) -> list[str]:
+    categories: list[str] = []
+    for reason in reasons:
+        category = classify_review_reason(reason)
+        if category:
+            categories.append(category)
+    return dedupe_by_priority(categories)
+
+
+def choose_primary_category(categories: list[str], facets: dict[str, Any]) -> str | None:
+    if not categories:
+        return None
+    if facets.get("mvp_relevance") == "out_of_scope" and "out_of_scope" in categories:
+        return "out_of_scope"
+    return categories[0]
+
+
+def classify_review_reason(reason: str) -> str:
+    if reason.startswith("cited_article_unknown:"):
+        normalized_ref = reason.split(":", 1)[1]
+        return "missing_scope" if looks_like_normalized_article_ref(normalized_ref) else "quality_issue"
+    if reason == "legal_domain_unknown":
+        return "out_of_scope"
+    if reason == "confidence_below_threshold":
+        return "low_confidence"
+    if reason in {
+        "cited_articles_empty",
+        "cited_article_missing_normalized_ref",
+        "cited_articles_evidence_missing",
+        "outcome_direction_unknown",
+        "outcome_disposition_unknown",
+        "outcome_evidence_missing",
+    }:
+        return "quality_issue"
+    if reason.endswith("_offset_missing") or reason.endswith("_offset_invalid"):
+        return "quality_issue"
+    if reason.endswith("_offset_out_of_range"):
+        return "quality_issue"
+    return "quality_issue"
+
+
+def looks_like_normalized_article_ref(value: str) -> bool:
+    return "_제" in value and value.endswith("조") and any(char.isdigit() for char in value)
+
+
+def dedupe_by_priority(categories: list[str]) -> list[str]:
+    priority = ["quality_issue", "missing_scope", "out_of_scope", "low_confidence"]
+    unique_categories = set(categories)
+    return [category for category in priority if category in unique_categories]
 
 
 def validate_evidence_spans(
@@ -101,7 +160,9 @@ def adjust_confidence(confidence: float, reasons: list[str]) -> float:
     penalty = 0.0
     for reason in reasons:
         if reason.startswith("cited_article_unknown"):
-            penalty += 0.2
+            penalty += 0.03
+        elif reason == "legal_domain_unknown":
+            penalty += 0.02
         elif reason in {"cited_articles_empty", "outcome_direction_unknown"}:
             penalty += 0.15
         elif reason.endswith("_evidence_missing"):

@@ -81,7 +81,7 @@ async function getCaseDetail(caseId: string): Promise<CaseDetail> {
   }
 
   if (!response.ok) {
-    throw new Error("Case detail request failed.");
+    throw new Error("판례 상세 요청에 실패했습니다.");
   }
 
   return response.json() as Promise<CaseDetail>;
@@ -104,12 +104,33 @@ function displayValue(value: unknown): string {
     return "-";
   }
   if (typeof value === "boolean") {
-    return value ? "true" : "false";
+    return value ? "예" : "아니오";
   }
   if (typeof value === "object") {
     return JSON.stringify(value);
   }
   return String(value);
+}
+
+function displayKey(key: string): string {
+  const labels: Record<string, string> = {
+    direction: "판결 방향",
+    disposition: "주문",
+    key_factor: "주요 판단 요소",
+    ratio_or_percentage: "비율",
+    confidence: "신뢰도",
+    claim_type: "청구 유형",
+    event_type: "사건 유형",
+    legal_domain: "법률 분야",
+    harm_type: "손해 유형",
+    evidence_issue: "증거 쟁점",
+    causation_dispute: "인과관계 다툼",
+    negligence_dispute: "과실 다툼",
+    damage_scope_dispute: "손해 범위 다툼",
+    key_disputed_fact: "핵심 다툼",
+    outcome_disposition: "판결 결과",
+  };
+  return labels[key] ?? key;
 }
 
 export default async function CaseDetailPage({ params }: CasePageProps) {
@@ -126,11 +147,11 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-5 py-6 sm:px-8 lg:px-10">
         <header className="border-b border-[#d8d8cf] pb-5">
           <Link className="text-sm font-medium text-[#44615a] hover:underline" href="/">
-            Back to search
+            검색으로 돌아가기
           </Link>
           <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="font-mono text-xs uppercase text-[#6d7165]">Case detail</p>
+              <p className="font-mono text-xs uppercase text-[#6d7165]">기준 판례</p>
               <h1 className="mt-1 text-2xl font-semibold">{detail.case.case_name}</h1>
               <p className="mt-2 text-sm text-[#5b5f55]">
                 {detail.case.case_no} · {detail.case.court_name}
@@ -138,15 +159,19 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
               </p>
             </div>
             <div className="border border-[#c7c8bd] bg-white px-3 py-2 text-sm text-[#4d534a]">
-              Confidence {Math.round(detail.structure.confidence_score * 100)}% ·{" "}
-              {detail.structure.review_status}
+              신뢰도 {Math.round(detail.structure.confidence_score * 100)}% ·{" "}
+              {reviewStatusLabel(detail.structure.review_status)}
             </div>
           </div>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-[#555950]">
+            이 판례를 기준 판례로 삼아 사실관계가 유사한 후보 판례를 찾을 수 있습니다.
+            후보를 선택하면 두 판례의 공통점, 차이점, 결론 차이를 비교합니다.
+          </p>
           <Link
             className="mt-4 inline-flex bg-[#1f3d36] px-4 py-2 text-sm font-semibold text-white hover:bg-[#17312b]"
             href={`/cases/${caseId}/compare`}
           >
-            View compare candidates
+            이 판례와 유사한 판례 찾기
           </Link>
         </header>
 
@@ -154,8 +179,8 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
           <section className="border border-[#d3d4ca] bg-white p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-xs uppercase text-[#6d7165]">Grounded summary</p>
-                <h2 className="mt-1 text-xl font-semibold">RAG case summary</h2>
+                <p className="font-mono text-xs uppercase text-[#6d7165]">근거 기반 요약</p>
+                <h2 className="mt-1 text-xl font-semibold">판례 요약</h2>
               </div>
               <span className="bg-[#eef0e8] px-2 py-1 text-xs text-[#4d534a]">
                 {ragSummary.summary.generated_by}
@@ -173,20 +198,20 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
 
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="grid gap-4">
-            <Panel title="Facts" value={detail.structure.facts} />
-            <Panel title="Legal issue" value={detail.structure.legal_issue} />
-            <Panel title="Court reasoning" value={detail.structure.court_reasoning} />
-            <Panel title="Conclusion" value={detail.structure.conclusion} />
+            <Panel title="사실관계" value={detail.structure.facts} />
+            <Panel title="법적 쟁점" value={detail.structure.legal_issue} />
+            <Panel title="법원의 판단" value={detail.structure.court_reasoning} />
+            <Panel title="결론" value={detail.structure.conclusion} />
           </div>
 
           <aside className="grid content-start gap-4">
             <section className="border border-[#d3d4ca] bg-white p-4">
-              <h2 className="text-sm font-semibold uppercase text-[#5b5f55]">Source</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#5b5f55]">사건 정보</h2>
               <dl className="mt-3 grid gap-2 text-sm">
-                <MetaRow label="Domain" value={detail.case.legal_domain} />
-                <MetaRow label="Type" value={detail.case.case_type} />
-                <MetaRow label="Level" value={detail.case.court_level} />
-                <MetaRow label="External ID" value={detail.case.external_id} />
+                <MetaRow label="분야" value={detail.case.legal_domain} />
+                <MetaRow label="사건유형" value={detail.case.case_type} />
+                <MetaRow label="심급" value={detail.case.court_level} />
+                <MetaRow label="외부 ID" value={detail.case.external_id} />
               </dl>
               {detail.case.source_url ? (
                 <a
@@ -195,13 +220,13 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  Open official source
+                  공식 원문 열기
                 </a>
               ) : null}
             </section>
 
             <section className="border border-[#d3d4ca] bg-white p-4">
-              <h2 className="text-sm font-semibold uppercase text-[#5b5f55]">Cited articles</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#5b5f55]">인용 조문</h2>
               <div className="mt-3 flex flex-wrap gap-2">
                 {detail.structure.cited_articles.length > 0 ? (
                   detail.structure.cited_articles.map((article) => (
@@ -210,7 +235,7 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
                     </span>
                   ))
                 ) : (
-                  <p className="text-sm text-[#666b61]">No cited articles.</p>
+                  <p className="text-sm text-[#666b61]">인용 조문이 없습니다.</p>
                 )}
               </div>
             </section>
@@ -218,17 +243,17 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
-          <KeyValuePanel items={materialFacts} title="Material facts" />
-          <KeyValuePanel items={outcome} title="Outcome" />
+          <KeyValuePanel items={materialFacts} title="주요 사실" />
+          <KeyValuePanel items={outcome} title="판결 결과" />
         </section>
 
         <section className="border-t border-[#d8d8cf] pt-5">
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <p className="font-mono text-xs uppercase text-[#6d7165]">Evidence</p>
-              <h2 className="text-xl font-semibold">Source paragraphs</h2>
+              <p className="font-mono text-xs uppercase text-[#6d7165]">근거</p>
+              <h2 className="text-xl font-semibold">원문 문단</h2>
             </div>
-            <p className="text-sm text-[#666b61]">{detail.paragraphs.length} paragraphs</p>
+            <p className="text-sm text-[#666b61]">{detail.paragraphs.length}개 문단</p>
           </div>
 
           <div className="grid gap-3">
@@ -238,14 +263,14 @@ export default async function CaseDetailPage({ params }: CasePageProps) {
                   <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-[#666b61]">
                     <span className="font-mono text-[#1f3d36]">{paragraph.evidence_id}</span>
                     <span>{paragraph.section_type}</span>
-                    <span>order {paragraph.paragraph_order}</span>
+                    <span>순서 {paragraph.paragraph_order}</span>
                   </div>
                   <p className="text-sm leading-6 text-[#30332d]">{paragraph.text}</p>
                 </article>
               ))
             ) : (
               <div className="border border-[#d3d4ca] bg-white p-4 text-sm text-[#666b61]">
-                No evidence paragraphs are available for this case yet.
+                이 판례의 근거 문단이 아직 없습니다.
               </div>
             )}
           </div>
@@ -277,7 +302,7 @@ function Panel({ title, value }: { title: string; value: string | null }) {
   return (
     <section className="border border-[#d3d4ca] bg-white p-4">
       <h2 className="text-sm font-semibold uppercase text-[#5b5f55]">{title}</h2>
-      <p className="mt-3 text-sm leading-6 text-[#30332d]">{value || "No data available."}</p>
+      <p className="mt-3 text-sm leading-6 text-[#30332d]">{value || "표시할 데이터가 없습니다."}</p>
     </section>
   );
 }
@@ -299,14 +324,20 @@ function KeyValuePanel({ title, items }: { title: string; items: Array<[string, 
         {items.length > 0 ? (
           items.map(([key, value]) => (
             <div className="grid gap-1 border-b border-[#eeeeea] pb-2 last:border-b-0" key={key}>
-              <dt className="font-mono text-xs text-[#666b61]">{key}</dt>
+              <dt className="text-xs font-semibold text-[#666b61]">{displayKey(key)}</dt>
               <dd className="text-[#30332d]">{displayValue(value)}</dd>
             </div>
           ))
         ) : (
-          <p className="text-[#666b61]">No structured data.</p>
+          <p className="text-[#666b61]">구조화된 데이터가 없습니다.</p>
         )}
       </dl>
     </section>
   );
+}
+
+function reviewStatusLabel(status: string) {
+  if (status === "auto_validated") return "자동 검증";
+  if (status === "needs_review") return "검토 필요";
+  return status;
 }

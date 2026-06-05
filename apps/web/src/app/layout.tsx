@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CaseLens",
-  description: "손해배상 판례 검색과 비교를 위한 MVP",
+  description: "판례 검색과 유사판례 비교를 위한 CaseLens MVP",
 };
 
 export default function RootLayout({

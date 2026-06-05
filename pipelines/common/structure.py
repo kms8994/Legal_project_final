@@ -31,6 +31,7 @@ def structure_case_text(
     text: str,
     case_type: str | None = None,
     court_level: str | None = None,
+    case_name: str | None = None,
     law_aliases: dict[str, str] | None = None,
     known_articles: set[str] | None = None,
 ) -> StructuredCase:
@@ -47,6 +48,17 @@ def structure_case_text(
     legal_issue = infer_legal_issue(text, extracted.cited_articles, extracted.keywords)
     court_reasoning = join_section(paragraphs, "reasoning")
     conclusion = join_section(paragraphs, "order") or outcome_to_conclusion(extracted.outcome)
+    facets = {
+        **extracted.facets,
+        **infer_domain_facets(text, case_name),
+        "mvp_relevance": infer_mvp_relevance(
+            text,
+            case_name,
+            extracted.cited_articles,
+            extracted.keywords,
+            extracted.facets,
+        ),
+    }
     material_facts = infer_material_facts(text, extracted.facets, extracted.outcome)
     aggravating_factors = infer_aggravating_factors(text)
     mitigating_factors = infer_mitigating_factors(text)
@@ -86,7 +98,7 @@ def structure_case_text(
         mitigating_factors=mitigating_factors,
         key_disputed_facts=key_disputed_facts,
         outcome=extracted.outcome,
-        facets=extracted.facets,
+        facets=facets,
         evidence_spans=evidence_spans,
         confidence_score=confidence,
         review_status="pending" if confidence < 0.7 else "auto_structured",
@@ -151,6 +163,153 @@ def infer_material_facts(
         "key_disputed_fact": infer_key_disputed_facts(text)[0] if infer_key_disputed_facts(text) else None,
         "outcome_disposition": outcome.get("disposition"),
     }
+
+
+def infer_domain_facets(text: str, case_name: str | None) -> dict[str, Any]:
+    title = case_name or ""
+    combined = f"{title} {text}"
+    rules = [
+        ("damages", ["손해배상", "불법행위", "위자료", "교통사고", "과실상계", "구상금"]),
+        ("unjust_enrichment", ["부당이득", "부당이득금"]),
+        ("lease", ["임대차", "보증금", "건물명도", "토지인도", "인도청구"]),
+        ("labor", ["임금", "근로자지위", "해고", "파견근로", "퇴직금"]),
+        ("inheritance", ["상속", "유류분", "상속분", "유언"]),
+        ("tax", ["취득세", "조세", "부가가치세", "법인세", "소득세"]),
+        ("property", ["소유권", "근저당", "말소등기", "이전등기", "점유"]),
+        ("ip", ["특허", "실용신안", "상표", "저작권", "지식재산"]),
+        ("contract", ["약정금", "매매대금", "물품대금", "공사대금", "채무불이행"]),
+        ("insurance", ["보험금", "보험자", "구상금", "자동차손해배상 보장법"]),
+        ("family", ["이혼", "재산분할", "친권", "양육"]),
+    ]
+    title_hits = [domain for domain, terms in rules if any(term in title for term in terms)]
+    text_hits = [domain for domain, terms in rules if any(term in combined for term in terms)]
+    ordered = dedupe(title_hits + text_hits)
+    primary = ordered[0] if ordered else "general"
+    return {
+        "primary_domain": primary,
+        "secondary_domains": ordered[1:],
+        "issue_tags": infer_issue_tags(combined),
+    }
+
+
+def infer_issue_tags(text: str) -> list[str]:
+    rules = [
+        ("causation", ["인과관계", "상당인과관계"]),
+        ("negligence", ["과실", "주의의무", "과실상계"]),
+        ("damages_amount", ["손해액", "배상액", "일실수입", "치료비"]),
+        ("limitation_period", ["소멸시효", "시효"]),
+        ("restitution", ["부당이득", "반환"]),
+        ("ownership", ["소유권", "등기", "점유"]),
+        ("employment_status", ["근로자지위", "파견근로", "직접고용"]),
+        ("wage", ["임금", "퇴직금", "수당"]),
+        ("deposit", ["보증금", "임대차"]),
+        ("inheritance_share", ["유류분", "상속분"]),
+        ("tax_assessment", ["처분취소", "취득세", "과세"]),
+        ("insurance_subrogation", ["구상금", "보험자", "대위"]),
+    ]
+    return [tag for tag, terms in rules if any(term in text for term in terms)]
+
+
+def infer_mvp_relevance(
+    text: str,
+    case_name: str | None,
+    cited_articles: list[dict[str, Any]],
+    keywords: list[str],
+    facets: dict[str, Any],
+) -> str:
+    refs = {article.get("normalized_ref") for article in cited_articles}
+    title = case_name or ""
+    strong_refs = {
+        "민법_제35조",
+        "민법_제390조",
+        "민법_제393조",
+        "민법_제396조",
+        "민법_제750조",
+        "민법_제751조",
+        "민법_제755조",
+        "민법_제756조",
+        "민법_제758조",
+        "민법_제760조",
+        "민법_제763조",
+        "민법_제766조",
+        "자동차손해배상 보장법_제3조",
+    }
+    weak_domain_terms = [
+        "상속",
+        "유류분",
+        "이혼",
+        "재산분할",
+        "근저당",
+        "소유권",
+        "토지인도",
+        "부당이득",
+        "취득세",
+        "조세",
+        "임대차",
+        "보험금",
+        "임금",
+        "근로자지위",
+        "실용신안",
+        "지식재산",
+        "특허",
+        "약정금",
+        "배당이의",
+        "하자보수",
+        "횡령",
+    ]
+    core_title_terms = [
+        "손해배상",
+        "구상금",
+        "보험금",
+    ]
+    core_fact_terms = [
+        "교통사고",
+        "자동차",
+        "피해자 과실",
+        "과실상계",
+        "사용자책임",
+        "피용자",
+        "공동불법행위",
+        "공작물",
+        "위자료",
+        "명예훼손",
+        "치료비",
+        "일실수입",
+        "불법행위책임",
+    ]
+    damages_hits = sum(
+        1
+        for keyword in [
+            "손해배상",
+            "불법행위",
+            "위자료",
+            "과실상계",
+            "교통사고",
+            "자동차",
+            "사용자책임",
+            "공동불법행위",
+            "공작물",
+            "채무불이행",
+        ]
+        if keyword in text
+    )
+    has_core_title = any(term in title for term in core_title_terms)
+    has_core_fact = any(term in text for term in core_fact_terms)
+    has_weak_title = any(term in title for term in weak_domain_terms)
+
+    if has_weak_title and not has_core_title:
+        return "out_of_scope"
+    if has_core_title and (refs & strong_refs or damages_hits >= 1):
+        return "mvp_relevant"
+    if refs & strong_refs and has_core_fact:
+        return "mvp_relevant"
+    if damages_hits >= 2 or (refs & strong_refs):
+        return "weakly_related"
+    if any(term in text for term in weak_domain_terms):
+        return "out_of_scope"
+    if keywords:
+        return "weakly_related"
+    return "out_of_scope"
 
 
 def infer_event_type(text: str) -> str | None:
@@ -244,3 +403,14 @@ def structure_confidence(
 
 def contains_any(text: str, keywords: list[str]) -> bool:
     return any(keyword in text for keyword in keywords)
+
+
+def dedupe(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result

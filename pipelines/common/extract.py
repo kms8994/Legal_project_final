@@ -56,6 +56,8 @@ def extract_case_features(
     known = known_articles or DEFAULT_KNOWN_ARTICLES
     cited_articles = extract_cited_articles(text, aliases, known)
     keywords = extract_keywords(text)
+    if not cited_articles:
+        cited_articles = infer_cited_articles(text, keywords, known)
     outcome = extract_outcome(text)
     facets = {
         "legal_domain": "손해배상" if is_damages_case(text, keywords) else "unknown",
@@ -131,6 +133,39 @@ def extract_keywords(text: str) -> list[str]:
     return [keyword for keyword in DAMAGES_KEYWORDS if keyword in text]
 
 
+def infer_cited_articles(
+    text: str,
+    keywords: list[str],
+    known_articles: set[str],
+) -> list[dict[str, Any]]:
+    if "민법_제750조" not in known_articles:
+        return []
+    strong_terms = ["불법행위", "손해배상", "교통사고", "과실상계", "위자료"]
+    if not any(term in text for term in strong_terms) and len(keywords) < 2:
+        return []
+    evidence_term = next((term for term in strong_terms if term in text), None)
+    if not evidence_term:
+        evidence_term = keywords[0] if keywords else "손해배상"
+    index = text.find(evidence_term)
+    if index < 0:
+        index = 0
+    return [
+        {
+            "normalized_ref": "민법_제750조",
+            "law_name": "민법",
+            "article_no": 750,
+            "article_branch_no": None,
+            "inferred": True,
+            "inference_reason": "damages_keyword_without_explicit_citation",
+            "evidence": {
+                "char_start": index,
+                "char_end": index + len(evidence_term),
+                "text": evidence_term,
+            },
+        }
+    ]
+
+
 def extract_outcome(text: str) -> dict[str, Any]:
     candidates = [
         ("파기", "파기", "원심 파기"),
@@ -191,7 +226,10 @@ def score_confidence(
 ) -> float:
     score = 0.25
     if cited_articles:
-        score += 0.3
+        if all(article.get("inferred") for article in cited_articles):
+            score += 0.15
+        else:
+            score += 0.3
     if keywords:
         score += min(len(keywords) * 0.05, 0.2)
     if outcome.get("disposition") != "unknown":

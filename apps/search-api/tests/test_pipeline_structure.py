@@ -21,6 +21,9 @@ def test_structure_case_text_builds_rule_fallback_structure() -> None:
     assert structured.conclusion is not None
     assert structured.material_facts["event_type"] == "교통사고"
     assert structured.material_facts["negligence_dispute"] is True
+    assert structured.facets["primary_domain"] == "damages"
+    assert "negligence" in structured.facets["issue_tags"]
+    assert structured.facets["mvp_relevance"] == "mvp_relevant"
     assert "자동차 운행자 손해배상책임" in (structured.legal_issue or "")
     assert structured.evidence_spans["facts"]
     assert structured.confidence_score >= 0.7
@@ -31,3 +34,15 @@ def test_structure_case_text_marks_sparse_text_pending() -> None:
 
     assert structured.review_status == "pending"
     assert structured.confidence_score < 0.7
+    assert structured.facets["primary_domain"] == "general"
+    assert structured.facets["mvp_relevance"] == "out_of_scope"
+
+
+def test_structure_case_text_classifies_non_damages_domain() -> None:
+    structured = structure_case_text(
+        "임대차보증금 반환과 건물명도가 문제된 사건이다. 피고는 보증금을 반환해야 한다.",
+        case_name="임대차보증금",
+    )
+
+    assert structured.facets["primary_domain"] == "lease"
+    assert "deposit" in structured.facets["issue_tags"]

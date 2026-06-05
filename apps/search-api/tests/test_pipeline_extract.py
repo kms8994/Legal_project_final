@@ -40,3 +40,22 @@ def test_extract_case_features_uses_shared_law_alias_normalization() -> None:
 
     refs = [article["normalized_ref"] for article in extracted.cited_articles]
     assert refs == ["자동차손해배상 보장법_제3조"]
+
+
+def test_extract_case_features_infers_article_for_strong_damages_text() -> None:
+    text = "피고의 불법행위로 원고에게 손해가 발생하여 손해배상책임이 문제된다. 청구를 일부 인용한다."
+
+    extracted = extract_case_features(text)
+
+    assert extracted.cited_articles == [
+        {
+            "normalized_ref": "민법_제750조",
+            "law_name": "민법",
+            "article_no": 750,
+            "article_branch_no": None,
+            "inferred": True,
+            "inference_reason": "damages_keyword_without_explicit_citation",
+        }
+    ]
+    assert extracted.evidence_spans["cited_articles"][0]["text"] == "불법행위"
+    assert extracted.confidence_score >= 0.6

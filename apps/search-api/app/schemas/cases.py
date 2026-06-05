@@ -91,6 +91,8 @@ class CompareCandidateScores(BaseModel):
     event_structure_match: float
     issue_similarity: float
     statute_overlap: float
+    domain_match_score: float = 0.0
+    issue_tag_overlap: float = 0.0
     facet_match_score: float
     outcome_difference: float
     final_score: float
@@ -104,6 +106,8 @@ class CompareCandidate(BaseModel):
     case_name: str
     summary_card: str
     scores: CompareCandidateScores
+    match_reasons: list[str] = Field(default_factory=list)
+    caution_reasons: list[str] = Field(default_factory=list)
     common_facts: list[str] = Field(default_factory=list)
     possible_turning_points: list[str] = Field(default_factory=list)
     outcome_difference_summary: str

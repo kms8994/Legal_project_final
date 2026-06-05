@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       {
         detail: {
           code: "SEARCH_API_UNAVAILABLE",
-          message: "Feedback API is unavailable.",
+          message: "피드백 API에 연결할 수 없습니다.",
         },
       },
       { status: 503 }

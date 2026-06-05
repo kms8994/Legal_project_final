@@ -23,6 +23,8 @@ def test_parse_article_ref_normalizes_common_statute_query() -> None:
         ("자배법 제3조", "자동차손해배상 보장법_제3조"),
         ("자동차손배법 3", "자동차손해배상 보장법_제3조"),
         ("자동차손해배상보장법 제3", "자동차손해배상 보장법_제3조"),
+        ("자동차손배법 제12조의2", "자동차손해배상 보장법_제12조의2"),
+        ("제조물책임법 제3조", "제조물 책임법_제3조"),
     ],
 )
 def test_parse_article_ref_accepts_flexible_user_input(

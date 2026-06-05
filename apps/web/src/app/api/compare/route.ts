@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       {
         detail: {
           code: "SEARCH_API_UNAVAILABLE",
-          message: "Compare analysis API is unavailable.",
+          message: "판례 비교 API에 연결할 수 없습니다.",
         },
       },
       { status: 503 }

@@ -1093,3 +1093,664 @@ npm.cmd run eval:mvp
 2. `missing_scope`가 높으면 그때 `민법 제756조`, `민법 제760조`, `민법 제758조` 등 조문 DB 확장을 검토한다.
 3. `out_of_scope`가 높으면 수집 쿼리 또는 MVP relevance filter를 조정한다.
 4. `low_confidence`가 높으면 confidence scoring을 조정하거나 inferred citation을 추가한다.
+
+### 17.11 다음 작업 실행 지침: 법령/조문 DB 확장 전략
+
+이 섹션은 다음 작업자가 계획서만 보고 바로 실행할 수 있도록 작성한 실행 지침이다.
+
+#### 배경
+
+초기에는 민법 전체를 넣지 않고 손해배상·계약·임대차·부당이득 등 현재 검색/비교 품질에 직접 영향을 주는 조문부터 선별 적재했다. 이유는 다음과 같다.
+
+1. `missing_scope`가 어떤 분야에서 발생하는지 추적하기 위해서다.
+2. 조문을 한꺼번에 많이 넣으면 데이터 범위 부족과 구조화 품질 문제를 구분하기 어려워진다.
+3. MVP 평가는 “법령 전체 복제 여부”가 아니라 “사용자 쟁점에 맞는 판례 검색/비교 품질”을 봐야 한다.
+
+하지만 전 분야 판례 검색으로 방향이 바뀌었기 때문에, 다음 단계부터는 법령 DB 적재 전략을 바꾼다.
+
+#### 새 원칙
+
+```text
+DB 적재 범위는 넓게 가져간다.
+평가/랭킹 기준 범위는 별도로 관리한다.
+```
+
+즉, `articles` DB에는 민법 및 주요 특별법 조문을 더 넓게 적재하되, 평가 리포트에서는 아래 지표를 계속 분리한다.
+
+- 전체 `needs_review_rate`
+- `missing_scope_rate`
+- `true_quality_issue_rate`
+- in-scope 조문 검색 precision
+- 전체 조문 검색 precision
+- 도메인별 자연어 검색 Top-5 domain relevant count
+- 비교 후보 domain match / issue tag overlap
+
+#### 목표
+
+- 민법 일부 선별 적재 단계에서 벗어나, 전 분야 판례가 인용하는 주요 조문을 DB에 확보한다.
+- `missing_scope`를 줄이되, 구조화 품질 문제를 숨기지 않는다.
+- 조문 DB는 넓게, 품질 평가는 도메인/스코프별로 분리한다.
+
+#### 우선순위
+
+1. P1: 민법 내 전 분야 핵심 조문
+   - 부당이득: 민법 제741조, 제742조, 제748조
+   - 임대차: 민법 제618조, 제623조, 제626조, 제629조, 제635조
+   - 계약/채무불이행: 민법 제390조, 제391조, 제393조, 제394조, 제395조, 제398조
+   - 소멸시효/변제/채권 일반: 민법 제162조, 제163조, 제166조, 제469조, 제477조
+   - 물권/등기/소유권: 민법 제186조, 제187조, 제213조, 제214조
+   - 상속/유류분: 민법 제1005조, 제1008조, 제1012조, 제1112조, 제1115조
+
+2. P2: 주요 특별법
+   - 근로기준법: 임금, 퇴직금, 해고 관련 상위 빈도 조문
+   - 상가건물 임대차보호법: 보증금, 대항력, 갱신요구 관련 조문
+   - 주택임대차보호법: 보증금, 대항력, 우선변제 관련 조문
+   - 국세기본법/지방세법: 취득세, 부과처분, 경정청구 관련 상위 빈도 조문
+   - 보험업법 또는 상법 보험편: 보험금, 구상, 대위 관련 상위 빈도 조문
+
+3. P3: 이후 확장
+   - 가족법, 지식재산권, 회사/상사, 행정소송 관련 조문
+
+#### 실행 전 확인
+
+먼저 현재 최신 평가 리포트와 missing scope 상위 조문을 확인한다.
+
+```powershell
+npm.cmd run eval:mvp
+```
+
+`docs/EvaluationRun.md`에서 확인할 항목:
+
+- `missing_scope_rate`
+- `primary_missing_scope_rate`
+- `review_categories`
+- `primary_domains`
+
+DB에서 상위 unknown 조문을 직접 확인할 수 있으면 아래 성격의 SQL을 사용한다.
+
+```sql
+select reason, count(*)
+from (
+  select jsonb_array_elements_text(evidence_spans->'validation'->'reasons') as reason
+  from case_structures
+  where evidence_spans ? 'validation'
+) reasons
+where reason like 'cited_article_unknown:%'
+group by reason
+order by count(*) desc;
+```
+
+#### 구현 파일
+
+| 목적 | 파일 |
+|------|------|
+| 조문 확장 목록 관리 | `docs/StatuteScope.md` |
+| 법령/조문 수집 | `pipelines/collect_laws.py` |
+| 조문 정규화 | `pipelines/common/articles.py` |
+| 검증 분류 | `pipelines/common/validate.py` |
+| DB 검증 실행 | `pipelines/validate.py` |
+| 평가 리포트 | `scripts/evaluate_mvp.py` |
+| 분석 기록 | `docs/NeedsReviewAnalysis.md`, `docs/EvaluationRun.md` |
+
+#### 실행 순서
+
+1. `docs/StatuteScope.md`에 P1 조문을 추가한다.
+
+추가할 때는 아래 정보를 반드시 적는다.
+
+```text
+priority: P1 또는 P2
+law_name: 민법 또는 특별법명
+article_no: 조 번호
+topic: 조문이 담당하는 쟁점
+domain: contract / lease / unjust_enrichment / labor / tax / inheritance 등
+reason: 최근 판례 DB에서 자주 등장하거나 평가 쿼리에 직접 필요함
+```
+
+2. 법령/조문을 수집한다.
+
+```powershell
+npm.cmd run collect:laws -- --priority P0,P1
+```
+
+P2까지 넣을 때:
+
+```powershell
+npm.cmd run collect:laws -- --priority P0,P1,P2
+```
+
+3. 검증을 다시 실행한다.
+
+```powershell
+npm.cmd run pipeline:validate -- --limit 1000
+```
+
+4. 평가 리포트를 다시 생성한다.
+
+```powershell
+npm.cmd run eval:mvp
+```
+
+5. API 테스트를 실행한다.
+
+```powershell
+npm.cmd run api:test
+```
+
+#### 완료 기준
+
+- `npm.cmd run api:test`가 통과한다.
+- `npm.cmd run eval:mvp`가 성공한다.
+- `docs/EvaluationRun.md`가 갱신된다.
+- `docs/NeedsReviewAnalysis.md`에 다음 수치를 기록한다.
+  - 조문 확장 전/후 `missing_scope_rate`
+  - 조문 확장 전/후 `needs_review_rate`
+  - 조문 확장 전/후 `true_quality_issue_rate`
+  - 도메인별 `primary_domains` 분포
+  - 자연어 검색 `avg_top5_domain_relevant_count`
+  - 비교 후보 `avg_domain_match_score`
+  - 비교 후보 `avg_issue_tag_overlap`
+
+#### 주의사항
+
+- `missing_scope_rate`가 줄어도 `true_quality_issue_rate`가 오르면 구조화 품질 문제가 드러난 것이므로 extractor/structure rule을 별도로 고친다.
+- 민법 전체를 넣는 것은 허용하되, 평가에서는 in-scope/out-of-scope를 계속 분리한다.
+- 특별법은 한 번에 많이 넣지 말고 분야별로 1차 수집 후 지표를 비교한다.
+- 법령정보센터 API는 런타임에서 호출하지 않는다. 항상 배치 파이프라인으로 DB에 적재한다.
+- 조문 DB 확장은 판례 수집과 별도 작업이다. 조문을 추가한 뒤에도 판례가 부족하면 `collect:cases`로 해당 도메인 판례를 따로 보강한다.
+
+#### 다음 권장 실행
+
+가장 먼저 P1 민법 전 분야 핵심 조문을 `docs/StatuteScope.md`에 추가하고 아래 순서로 실행한다.
+
+```powershell
+npm.cmd run collect:laws -- --priority P0,P1
+npm.cmd run pipeline:validate -- --limit 1000
+npm.cmd run eval:mvp
+npm.cmd run api:test
+```
+
+이 작업이 끝난 뒤에도 `missing_scope_rate`가 높으면 P2 특별법으로 확장한다.
+
+### 17.12 최근 진행: P2 자동차손배법 조문 선별 확장
+
+2026-06-05에 `missing_scope` 상위 항목을 확인한 뒤, 민법 일반 조문을 넓게 추가하기 전에 교통사고/보험 쟁점과 직접 관련된 자동차손해배상 보장법 조문을 먼저 선별 확장했다.
+
+변경:
+
+- `docs/StatuteScope.md`에 P2 조문 추가
+  - 자동차손해배상 보장법 제5조
+  - 자동차손해배상 보장법 제12조의2
+  - 자동차손해배상 보장법 제15조
+  - 자동차손해배상 보장법 제19조
+- `제조물책임법` alias를 추가해 기존 P2 `제조물 책임법 제3조` 수집 실패를 수정
+- 가지번호 조문 입력 예시(`자동차손배법 제12조의2`)와 제조물책임법 입력 예시를 unit test에 추가
+
+실행 결과:
+
+```powershell
+npm.cmd run collect:laws -- --priority P2 --dry-run
+npm.cmd run collect:laws -- --priority P2
+npm.cmd run pipeline:validate -- --limit 1000
+npm.cmd run eval:mvp
+npm.cmd run api:test
+```
+
+```json
+{
+  "laws_upserted": 3,
+  "aliases_upserted": 7,
+  "articles_upserted": 6,
+  "failed_items": 0
+}
+```
+
+평가 변화:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| needs_review_rate | 0.623 | 0.603 |
+| true_quality_issue_rate | 0.247 | 0.235 |
+| missing_scope_rate | 0.342 | 0.325 |
+| primary_missing_scope_rate | 0.314 | 0.304 |
+| natural avg Top-5 domain relevant count | 5 | 5 |
+| compare avg domain match score | 0.948 | 0.948 |
+| compare avg issue tag overlap | 0.687 | 0.659 |
+
+검증:
+
+```text
+api:test 52 passed
+P2 dry-run failed_items 0
+eval:mvp succeeded
+```
+
+다음 권장 작업:
+
+1. 최신 missing-scope 상위 민법 조문 중 전 분야 검색에 유용한 소량 배치를 `docs/StatuteScope.md`에 추가한다.
+2. 후보: 민법 제103조, 제2조, 제741조, 제162조, 제166조, 제398조, 제1112조, 제1114조, 제1115조.
+3. 추가 후 `collect:laws`, `pipeline:validate`, `eval:mvp`, `api:test` 순서로 같은 지표를 비교한다.
+
+### 17.13 최근 진행: P1 민법 일반 조문 소량 배치
+
+2026-06-05에 배포 가능성 판단을 위해 P1 민법 일반 조문을 소량 추가하고 전체 검증을 다시 실행했다.
+
+추가 조문:
+
+- 민법 제2조
+- 민법 제103조
+- 민법 제162조
+- 민법 제166조
+- 민법 제398조
+- 민법 제741조
+- 민법 제1112조
+- 민법 제1114조
+- 민법 제1115조
+
+실행 결과:
+
+```powershell
+npm.cmd run collect:laws -- --priority P1 --dry-run
+npm.cmd run collect:laws -- --priority P1
+npm.cmd run pipeline:validate -- --limit 1000
+npm.cmd run eval:mvp
+npm.cmd run api:test
+npm.cmd run web:lint
+npm.cmd run web:build
+```
+
+```json
+{
+  "laws_upserted": 1,
+  "aliases_upserted": 1,
+  "articles_upserted": 15,
+  "failed_items": 0
+}
+```
+
+평가 변화:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| needs_review_rate | 0.603 | 0.595 |
+| true_quality_issue_rate | 0.235 | 0.248 |
+| missing_scope_rate | 0.325 | 0.291 |
+| primary_missing_scope_rate | 0.304 | 0.271 |
+| natural avg Top-5 relevant count | 2.438 | 2.438 |
+| natural avg Top-5 MVP relevant count | 3.062 | 3.125 |
+| natural avg Top-5 domain relevant count | 5 | 5 |
+| compare avg material fact match | 0.790 | 0.794 |
+| compare avg domain match score | 0.948 | 0.935 |
+| compare avg issue tag overlap | 0.659 | 0.692 |
+
+검증:
+
+```text
+api:test 52 passed
+web:lint passed
+web:build passed
+eval:mvp succeeded
+```
+
+배포 판단:
+
+```text
+내부 데모/폐쇄 베타: 가능
+공개 MVP: 한 번 더 품질 중심 개선 후 권장
+```
+
+공개 MVP 전 권장 기준:
+
+- `missing_scope_rate <= 0.25`
+- `true_quality_issue_rate <= 0.20`
+- 자연어 검색 `avg_top5_relevant_count >= 3.0`
+- `api:test`, `web:lint`, `web:build` 통과
+
+다음 권장 작업:
+
+1. `quality_issue` 최신 샘플 20건을 뽑아 원인을 분류한다.
+2. `cited_articles_empty`, `outcome_*_unknown`, `evidence_missing` 중 가장 큰 원인 하나만 고친다.
+3. 자연어 검색 Top-5에서 관련도 0~1개인 N04, N06, N08, N10 쿼리의 랭킹/intent를 우선 보정한다.
+
+### 17.14 최근 진행: quality 분류와 자연어 intent 보강
+
+2026-06-05에 공개 MVP 가능성을 높이기 위해 두 가지 소규모 보정을 적용했다.
+
+변경:
+
+- `facets.mvp_relevance = out_of_scope`인 구조는 여러 quality reason을 갖더라도 `primary_category`를 `out_of_scope`로 우선 분류한다.
+- 자연어 intent parser가 사용자 표현을 법률 쟁점어로 확장한다.
+  - 잘못/감액/줄어든 -> 과실상계
+  - 회사 직원/업무 중/사용자 책임 -> 사용자책임
+  - 여러 사람/함께/공동 -> 공동불법행위
+  - 통상손해/특별손해/배상 범위 -> 손해배상 범위
+- inferred article id를 `civil_act_750` 같은 placeholder가 아니라 `민법_제750조` 형식으로 맞췄다.
+
+평가 변화:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| natural avg Top-5 relevant count | 2.500 | 3.750 |
+| natural avg Top-5 MVP relevant count | 3.125 | 3.125 |
+| natural avg Top-5 domain relevant count | 5 | 5 |
+| needs_review_rate | 0.592 | 0.592 |
+| primary_quality_issue_rate | 0.248 before primary fix / 0.113 after | 0.113 |
+| primary_missing_scope_rate | 0.271 before primary fix | 0.206 |
+| primary_out_of_scope_rate | 0.075 before primary fix | 0.273 |
+| compare avg material fact match | 0.790 | 0.722 |
+| compare avg domain match score | 0.948 | 0.948 |
+| compare avg issue tag overlap | 0.674 | 0.478 |
+
+검증:
+
+```text
+api:test 53 passed
+web:lint passed
+web:build passed
+eval:mvp succeeded
+```
+
+최신 배포 판단:
+
+```text
+공개 MVP / 수업 데모 배포 가능
+단, 결과는 참고용이며 법률 자문이 아니라는 고지와 review_status 노출을 유지한다.
+```
+
+남은 개선:
+
+1. 비교 후보 `issue_tag_overlap`이 낮아진 원인을 확인한다.
+2. compare ranking에서 issue-tag 또는 material-fact 가중치를 소폭 올리는 실험을 한다.
+3. 배포 전 `.env.example`, README 실행 절차, 면책 문구를 최종 점검한다.
+
+### 17.15 최근 진행: compare ranking MVP 튜닝
+
+2026-06-05에 사용자 피드백을 받을 MVP 수준으로 비교 후보 랭킹을 보수적으로 다듬었다.
+
+변경:
+
+- `issue_tag_overlap` 가중치를 높였다.
+- `material_fact_match` 가중치를 높였다.
+- 같은 도메인이라는 이유만으로 후보가 상위에 오르지 않도록 domain weight를 낮췄다.
+- 기준 사건에 issue tag가 있는데 후보에는 없거나, material fact match가 낮으면 감점한다.
+
+평가 변화:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| natural avg Top-5 relevant count | 3.750 | 3.750 |
+| compare avg material fact match | 0.722 | 0.716 |
+| compare avg domain match score | 0.948 | 0.948 |
+| compare avg issue tag overlap | 0.478 | 0.528 |
+| evidence coverage rate | 1.0 | 1.0 |
+
+검증:
+
+```text
+api:test 53 passed
+web:lint passed
+web:build passed
+eval:mvp succeeded
+```
+
+현재 MVP 판단:
+
+```text
+사용자 피드백을 받을 공개 MVP로 낼 수 있는 수준.
+남은 리스크는 compare material-fact 정밀도와 일부 out-of-scope 데이터 혼입.
+```
+
+출시 직후 모니터링할 피드백 label:
+
+- `not_relevant`
+- `facts_not_similar`
+- `material_fact_missed`
+- `wrong_statute`
+- `summary_error`
+
+출시 직후 1차 개선 기준:
+
+- 비교 후보 피드백 중 `facts_not_similar`가 30%를 넘으면 material fact 가중치/추출 rule을 다시 조정한다.
+- `wrong_statute`가 15%를 넘으면 조문 추출/정규화 샘플을 우선 점검한다.
+- `summary_error`가 15%를 넘으면 RAG summary fallback과 Gemini evidence prompt를 우선 점검한다.
+
+### 17.16 최근 진행: 피드백 MVP용 DB 확장
+
+2026-06-05에 사용자 피드백을 받을 수 있는 규모를 목표로 판례 DB를 613건에서 1,076건까지 확장했다.
+
+수집 배치:
+
+- 계약대금/채무불이행/손해배상: 100건
+- 상속재산/유류분: 88건
+- 보험금/구상금/보험자대위/손해배상: 100건
+- 이혼/위자료/재산분할/손해배상: 100건
+- 소유권이전등기/말소등기/부동산: 100건
+- 임대차보증금/건물명도: 100건
+- 부당이득/반환청구: 100건
+- 근로자/임금/퇴직금/해고: 100건
+- 취득세/부과처분/경정청구: 100건
+- 보험금/보험자대위/구상금: 100건
+
+처리 파이프라인:
+
+```powershell
+npm.cmd run pipeline:normalize -- --limit 1600
+npm.cmd run pipeline:split -- --limit 100
+npm.cmd run pipeline:split -- --limit 100
+npm.cmd run pipeline:split -- --limit 100
+npm.cmd run pipeline:structure -- --limit 1600 --overwrite
+npm.cmd run pipeline:validate -- --limit 2200
+npm.cmd run pipeline:embed -- --limit 2200
+npm.cmd run eval:mvp
+npm.cmd run api:test
+npm.cmd run web:lint
+npm.cmd run web:build
+```
+
+최신 DB 규모:
+
+| Item | Count |
+|------|------:|
+| cases | 1,076 |
+| paragraphs | 119,542 |
+| structures | 1,943 |
+| embeddings | 9,267 |
+
+최신 평가:
+
+| Metric | Value |
+|--------|------:|
+| statute precision@10 | 1.0 |
+| natural avg Top-5 relevant count | 3.625 |
+| compare avg material fact match | 0.836 |
+| compare avg domain match score | 1.0 |
+| compare avg issue tag overlap | 0.778 |
+| evidence coverage rate | 1.0 |
+| true_quality_issue_rate | 0.126 |
+| primary_quality_issue_rate | 0.061 |
+| primary_missing_scope_rate | 0.180 |
+
+최신 판단:
+
+```text
+피드백 MVP 안정권 도달.
+현재 DB 규모와 검색/비교 지표 기준으로 사용자 피드백을 받아도 된다.
+```
+
+출시 직전 남은 체크:
+
+1. README에 실행 순서와 환경 변수 확인.
+2. UI에 참고용/비법률자문 고지 확인.
+3. 피드백 label별 집계 쿼리 또는 간단한 운영 문서 준비.
+4. 출시 후 20~30개 피드백이 쌓이면 `facts_not_similar`, `wrong_statute`, `summary_error` 비율을 먼저 본다.
+### 17.17 최신 진행: 피드백 MVP 핵심 UI/UX, 검색/비교 흐름 정리
+
+2026-06-06 기준으로 CaseLens 피드백 MVP의 주요 사용자 흐름을 단일 화면 중심으로 재정의하고, 검색 결과부터 비교 화면까지 사용자가 "어떤 판례인지"를 바로 이해할 수 있게 UI와 API 연결을 정리했다. 이 섹션은 다음 에이전트가 현재 작업을 그대로 이어받기 위한 인수인계 기준이다.
+
+#### 현재 실행 기준
+
+| 항목 | 현재 값 |
+|------|---------|
+| Frontend URL | `http://localhost:3000` |
+| Search API URL | `http://localhost:8001` |
+| Next.js 환경 파일 | `apps/web/.env.local` |
+| API 환경 변수 | `SEARCH_API_URL=http://localhost:8001` |
+| 주 화면 | `apps/web/src/app/page.tsx` |
+| 상세 API | `GET /api/cases/{caseId}` |
+| 비교 후보 API | `GET /api/cases/{caseId}/compare-candidates` |
+| 비교 API | `POST /api/compare` |
+
+포트 8000은 로컬 Windows 환경에서 이전 프로세스가 남아 있던 문제가 있었기 때문에, 현재 안정적으로 확인된 Search API 포트는 8001이다. 다음 작업자가 서버를 다시 띄울 때도 우선 8001을 사용한다.
+
+#### 현재 주 사용자 흐름
+
+1. 사용자는 첫 화면에서 `조문 검색` 또는 `자연어 검색`을 선택한다.
+2. 조문 검색은 예를 들어 `민법 제750조`처럼 입력한다. 자연어 검색은 사건 사실관계를 문장으로 입력한다.
+3. 검색 결과는 판례 카드 목록으로 표시된다.
+4. 검색 결과 카드에는 근거 문단 원문을 길게 보여주지 않고, 아래 3개 요약을 우선 보여준다.
+   - 사실관계
+   - 법원의 판단 근거
+   - 법원의 판결
+5. 사용자가 `기준 판례로 선택`을 누르면 다른 상세 페이지로 이동하지 않고, 같은 화면에서 기준 판례 요약과 유사 사실관계 판례 후보를 보여준다.
+6. 사용자가 후보 판례에서 `이 판례와 비교하기`를 누르면 같은 화면에서 비교 화면으로 전환한다.
+7. 비교 화면은 왼쪽에 기준 판례, 오른쪽에 비교 판례를 같은 구조로 표시한다.
+8. 비교 화면의 두 판례 모두 아래 3개 섹션을 같은 순서로 보여준다.
+   - 사실관계
+   - 법원의 판단 근거
+   - 법원의 판결
+9. 검색 결과 단계, 기준 판례 단계, 비교 단계에서 각 판례마다 `원문 보기` 버튼을 제공한다.
+10. `원문 보기`는 DB의 `source_url`이 있으면 해당 URL을 새 창으로 열고, 없으면 사건번호 기반 법령정보 사이트 판례 검색 URL을 새 창으로 연다.
+11. 각 단계에서 이전 단계로 돌아가는 버튼은 명확한 문구로 표시한다.
+   - `← 검색 결과로 돌아가기`
+   - `← 비교 후보로 돌아가기`
+
+#### UI/UX 변경 사항
+
+- `검색 범위` 박스는 제거했다.
+- 본문 영역은 `max-w-7xl` 폭을 더 넓게 사용한다.
+- `사용자 흐름`은 검색 입력 영역 아래에 가로 진행 바로 표시한다.
+- 자연어 검색에서만 필요한 `쟁점 분석`은 왼쪽 사이드바가 아니라 결과 영역 위쪽의 가로 패널로 표시한다.
+- 비교 화면은 기준/비교 판례를 2열로 보여주며, 두 카드의 정보 구조를 동일하게 맞췄다.
+- 검색 결과 카드에서도 근거 문단 박스를 제거하고, 상세 API에서 가져온 구조화 데이터를 우선 사용해 사용자가 한눈에 판례 성격을 파악하도록 했다.
+
+#### 검색 결과 카드 데이터 구성
+
+검색 결과 API는 빠른 검색용 데이터만 반환하므로, 검색 완료 후 프론트에서 상위 10개 결과에 대해 `GET /api/cases/{caseId}`를 추가 호출한다. 이 데이터를 `resultDetails` 상태에 저장하고 카드 렌더링에 사용한다.
+
+검색 결과 카드의 3개 요약 우선순위는 다음과 같다.
+
+| 섹션 | 우선 사용 데이터 | fallback |
+|------|------------------|----------|
+| 사실관계 | `detail.structure.facts` | `material_facts` 요약, `summary_card`, 사건명 |
+| 법원의 판단 근거 | `detail.structure.court_reasoning` | `legal_issue`, 인용 조문 기반 문장 |
+| 법원의 판결 | `detail.structure.conclusion` | `outcome` 요약 |
+
+현재 DB에는 `facts`가 비어 있는 사건도 많지만 `material_facts`는 대부분 존재한다. 그래서 `facts`가 없을 때는 `material_facts`를 사람이 읽을 수 있는 라벨로 바꿔 요약한다.
+
+#### 비교 화면 데이터 구성
+
+기준 판례는 기준 선택 시 `GET /api/cases/{caseId}`로 상세를 불러온다. 비교 판례는 후보 선택 시 아래 두 API를 동시에 호출한다.
+
+```text
+POST /api/compare
+GET /api/cases/{compareCaseId}
+```
+
+비교 판례 상세도 별도 상태 `compareDetail`에 저장한다. 비교 화면의 `CompareSide` 컴포넌트는 기준 판례와 비교 판례 모두 같은 방식으로 상세 데이터를 받아 `CaseNarrativeSections`를 렌더링한다.
+
+#### 원문 보기 동작
+
+`OriginalLink` 컴포넌트를 추가했다.
+
+- `sourceUrl`이 있으면 그 주소를 그대로 사용한다.
+- `sourceUrl`이 없으면 `lawSearchUrl(caseNo)`로 사건번호 검색 URL을 만든다.
+- URL 형식은 현재 다음과 같다.
+
+```text
+https://www.law.go.kr/LSW/precSc.do?menuId=7&subMenuId=47&tabMenuId=213&query={사건번호}
+```
+
+원문은 항상 `target="_blank"`로 새 창에서 열린다.
+
+#### API/DB 보정 사항
+
+- `apps/search-api/app/repositories/cases.py`: case structure 조회 시 `facts` 또는 `material_facts`가 있는 구조를 우선 선택하도록 정렬을 보정했다.
+- `apps/search-api/app/repositories/statute_search.py`: 조문 검색 row에 `material_facts`를 포함했다.
+- `apps/search-api/app/services/statute_search.py`: `facts`, `material_facts`, fallback summary 순서로 검색 카드 요약을 구성하도록 했다.
+- `apps/search-api/app/services/cases.py`: 기준 판례와 비교 후보 요약에서 `material_facts`를 적극 활용하도록 했다.
+
+#### 현재 데이터 상태
+
+| 항목 | 값 |
+|------|---:|
+| 판례 | 1,076 |
+| 문단 | 119,542 |
+| 임베딩 | 9,267 |
+| 근거 커버리지 | 100% |
+
+DB 구조화 데이터 상태는 다음 성격이다.
+
+- `facts`가 채워진 사건은 일부다.
+- `material_facts`는 대부분의 사건에 존재한다.
+- 그래서 MVP UI에서는 `facts`만 기다리지 않고 `material_facts`를 사용자용 설명으로 변환해 보여주는 전략을 쓴다.
+
+#### 이번 작업에서 확인한 주요 UX 판단
+
+- 피드백 MVP에서는 사용자가 판례를 하나씩 상세 페이지로 들어갔다 나오면 흐름이 끊긴다.
+- 따라서 검색, 기준 판례 선택, 비교 후보 선택, 비교 결과 확인을 단일 화면에서 이어가도록 했다.
+- 사용자는 첫 피드백에서 "검색 결과가 맞는지", "유사 판례가 진짜 유사한지", "비교가 한눈에 되는지"를 판단할 가능성이 높다.
+- 따라서 카드에 긴 원문 문단을 보여주기보다 `사실관계 / 판단 근거 / 판결`을 반복된 구조로 보여주는 것이 더 적합하다.
+
+#### 검증 완료
+
+```powershell
+npm.cmd run web:lint
+npm.cmd run web:build
+```
+
+결과:
+
+```text
+Next.js lint 통과
+Next.js production build 통과
+http://localhost:3000 HTTP 200 확인
+POST http://localhost:3000/api/search/statute 200 확인
+```
+
+검색 API smoke test는 `민법 제750조` 기준으로 응답을 확인했다. 현재 프론트는 `http://localhost:3000`, 백엔드는 `http://localhost:8001` 기준이다.
+
+#### 다음 에이전트가 이어서 할 작업
+
+1. 프론트 화면에서 `민법 제750조` 검색 후 첫 3개 카드의 `사실관계 / 법원의 판단 근거 / 법원의 판결` 문구 품질을 직접 확인한다.
+2. `법원의 판단 근거`가 너무 조문 중심 fallback으로만 나오는 사건이 많으면 Search API 또는 pipeline structure에서 `court_reasoning` 생성 품질을 보강한다.
+3. 비교 후보 화면에서 기준 판례 왼쪽 요약과 후보 목록 오른쪽 요약이 중복되거나 과하게 긴지 확인한다.
+4. 비교 화면에서 기준/비교 판례의 3개 섹션이 같은 밀도로 보이는지 확인한다.
+5. `원문 보기`가 실제 법령정보 사이트에서 원하는 원문 또는 검색 결과로 열리는지 브라우저에서 확인한다.
+6. 피드백 MVP 배포 전에는 아래 피드백 라벨 수집 UI를 연결한다.
+   - `not_relevant`
+   - `facts_not_similar`
+   - `material_fact_missed`
+   - `wrong_statute`
+   - `summary_error`
+7. 사용자가 실제 피드백을 줄 수 있도록 비교 결과 화면 하단에 간단한 피드백 폼을 붙이는 것이 다음 우선순위다.
+8. 검색 결과 카드의 상세 API hydrate는 현재 상위 10개를 병렬 호출한다. 데이터가 늘어났을 때 느려지면 BFF에서 batch detail endpoint를 만들거나 검색 API 응답에 필요한 구조 필드를 포함시키는 방식으로 최적화한다.
+9. 배포 전에는 `.env.local` 대신 Vercel 또는 배포 환경 변수에 `SEARCH_API_URL`을 정확히 넣어야 한다.
+10. 8001 포트 기준이 로컬 임시 운용인지, 배포 환경의 Search API URL이 무엇인지 최종 확정한다.
+
+#### 이번 작업의 주요 파일
+
+| 파일 | 내용 |
+|------|------|
+| `apps/web/src/app/page.tsx` | 단일 화면 검색/기준판례/비교 흐름, 검색 카드 3단 요약, 비교 카드 3단 요약, 원문 보기 |
+| `apps/web/src/app/api/*/route.ts` | Next.js BFF가 `SEARCH_API_URL` 기준으로 FastAPI에 요청 |
+| `apps/search-api/app/repositories/cases.py` | 구조화 데이터 선택 우선순위 보정 |
+| `apps/search-api/app/repositories/statute_search.py` | 검색 row에 material_facts 포함 |
+| `apps/search-api/app/services/statute_search.py` | 검색 결과 요약 품질 보정 |
+| `apps/search-api/app/services/cases.py` | 상세/비교 후보 요약과 한국어 표시 보정 |
+
+#### 알려진 주의점
+
+- PowerShell `Get-Content` 출력에서 한국어가 깨져 보일 수 있다. 파일 자체는 UTF-8 기준으로 관리한다.
+- 검색 결과 카드는 상세 API hydrate가 끝나기 전 잠깐 fallback 요약을 보여줄 수 있다.
+- 현재 카드 요약은 완전한 법률 자문 문장이 아니라 피드백 MVP 탐색용 요약이다.
+- `source_url`이 없는 판례는 법령정보 사이트 검색 결과 페이지로 이동한다. 원문 상세 페이지로 항상 바로 가려면 외부 ID 기반 URL 매핑을 더 강화해야 한다.

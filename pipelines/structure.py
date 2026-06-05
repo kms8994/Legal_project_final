@@ -25,7 +25,7 @@ def structure_cases(database_url: str, limit: int | None, overwrite: bool) -> di
             limit_sql = "limit %s" if limit else ""
             cursor.execute(
                 f"""
-                select id, raw_text, case_type, court_level
+                select id, raw_text, case_type, court_level, case_name
                 from cases
                 where raw_text <> ''
                   and (
@@ -43,15 +43,16 @@ def structure_cases(database_url: str, limit: int | None, overwrite: bool) -> di
                 """,
                 (overwrite, limit) if limit else (overwrite,),
             )
-            rows: list[tuple[Any, str, str | None, str | None]] = cursor.fetchall()
+            rows: list[tuple[Any, str, str | None, str | None, str | None]] = cursor.fetchall()
 
             upserted = 0
             needs_review = 0
-            for case_id, raw_text, case_type, court_level in rows:
+            for case_id, raw_text, case_type, court_level, case_name in rows:
                 structured = structure_case_text(
                     raw_text,
                     case_type=case_type,
                     court_level=court_level,
+                    case_name=case_name,
                     law_aliases=law_aliases,
                     known_articles=known_articles,
                 )

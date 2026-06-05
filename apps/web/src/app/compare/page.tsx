@@ -90,7 +90,7 @@ async function getAnalysis(baseCaseId: string, compareCaseId: string): Promise<C
   }
 
   if (!response.ok) {
-    throw new Error("Compare analysis request failed.");
+    throw new Error("판례 비교 분석 요청에 실패했습니다.");
   }
 
   return response.json() as Promise<CompareAnalysis>;
@@ -99,7 +99,7 @@ async function getAnalysis(baseCaseId: string, compareCaseId: string): Promise<C
 function formatOutcome(outcome: Record<string, unknown>): string {
   const entries = Object.entries(outcome);
   if (entries.length === 0) {
-    return "No structured outcome.";
+    return "구조화된 결과가 없습니다.";
   }
   return entries.map(([key, value]) => `${key}: ${String(value)}`).join(" · ");
 }
@@ -118,14 +118,14 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         <header className="border-b border-[#d8d8cf] pb-5">
           <div className="flex flex-wrap gap-3 text-sm font-medium text-[#44615a]">
             <Link className="hover:underline" href="/">
-              Search
+              검색
             </Link>
             <Link className="hover:underline" href={`/cases/${data.base.case_id}/compare`}>
-              Candidates
+              유사판례 후보
             </Link>
           </div>
           <div className="mt-4">
-            <p className="font-mono text-xs uppercase text-[#6d7165]">Comparison analysis</p>
+            <p className="font-mono text-xs uppercase text-[#6d7165]">판례 비교</p>
             <h1 className="mt-1 text-2xl font-semibold">
               {data.base.case_no} vs {data.compare.case_no}
             </h1>
@@ -137,24 +137,24 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         </header>
 
         <section className="grid gap-4 lg:grid-cols-2">
-          <CaseSummary label="Base" item={data.base} />
-          <CaseSummary label="Compare" item={data.compare} />
+          <CaseSummary label="기준 판례" item={data.base} />
+          <CaseSummary label="비교 판례" item={data.compare} />
         </section>
 
         <section className="border border-[#d3d4ca] bg-white p-4">
-          <h2 className="text-sm font-semibold uppercase text-[#5b5f55]">Result difference</h2>
+          <h2 className="text-sm font-semibold uppercase text-[#5b5f55]">결론 차이</h2>
           <p className="mt-3 text-sm leading-6 text-[#30332d]">{data.analysis.result_difference}</p>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
-          <ClaimList items={data.analysis.common_points} title="Common points" />
-          <DifferenceList items={data.analysis.material_differences} title="Material differences" />
-          <TurningPointList items={data.analysis.turning_points} title="Turning points" />
+          <ClaimList items={data.analysis.common_points} title="공통점" />
+          <DifferenceList items={data.analysis.material_differences} title="주요 차이점" />
+          <TurningPointList items={data.analysis.turning_points} title="판단을 가른 지점" />
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
-          <EvidenceList items={data.evidence_links.base} title="Base evidence" />
-          <EvidenceList items={data.evidence_links.compare} title="Compare evidence" />
+          <EvidenceList items={data.evidence_links.base} title="기준 판례 근거" />
+          <EvidenceList items={data.evidence_links.compare} title="비교 판례 근거" />
         </section>
 
         <FeedbackForm baseCaseId={data.base.case_id} compareCaseId={data.compare.case_id} />
@@ -206,7 +206,7 @@ function ClaimList({
             </article>
           ))
         ) : (
-          <p className="text-sm text-[#666b61]">No structured common point.</p>
+          <p className="text-sm text-[#666b61]">구조화된 공통점이 없습니다.</p>
         )}
       </div>
     </section>
@@ -228,13 +228,13 @@ function DifferenceList({
           items.map((item) => (
             <article className="text-sm leading-6 text-[#30332d]" key={item.factor}>
               <p className="font-semibold">{item.factor}</p>
-              <p>Base: {item.base}</p>
-              <p>Compare: {item.compare}</p>
+              <p>기준 판례: {item.base}</p>
+              <p>비교 판례: {item.compare}</p>
               <p className="mt-1 text-[#555950]">{item.meaning}</p>
             </article>
           ))
         ) : (
-          <p className="text-sm text-[#666b61]">No structured material difference.</p>
+          <p className="text-sm text-[#666b61]">구조화된 주요 차이점이 없습니다.</p>
         )}
       </div>
     </section>
@@ -261,7 +261,7 @@ function TurningPointList({
             </article>
           ))
         ) : (
-          <p className="text-sm text-[#666b61]">No structured turning point.</p>
+          <p className="text-sm text-[#666b61]">구조화된 판단 차이 지점이 없습니다.</p>
         )}
       </div>
     </section>
@@ -289,7 +289,7 @@ function EvidenceList({
             </article>
           ))
         ) : (
-          <p className="text-sm text-[#666b61]">No evidence link.</p>
+          <p className="text-sm text-[#666b61]">연결된 근거가 없습니다.</p>
         )}
       </div>
     </section>

@@ -38,6 +38,10 @@ class SearchResultCard(BaseModel):
     case_name: str
     case_type: str | None = None
     legal_domain: str | None = None
+    primary_domain: str | None = None
+    secondary_domains: list[str] = Field(default_factory=list)
+    issue_tags: list[str] = Field(default_factory=list)
+    mvp_relevance: str | None = None
     summary_card: str
     outcome: dict[str, Any] = Field(default_factory=dict)
     cited_articles: list[str] = Field(default_factory=list)

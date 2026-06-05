@@ -26,7 +26,7 @@ export async function GET(_request: Request, context: RouteContext) {
       {
         detail: {
           code: "SEARCH_API_UNAVAILABLE",
-          message: "Case RAG summary API is unavailable.",
+          message: "판례 요약 API에 연결할 수 없습니다.",
         },
       },
       { status: 503 }

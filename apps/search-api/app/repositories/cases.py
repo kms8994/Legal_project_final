@@ -148,7 +148,12 @@ class PostgresCaseDetailRepository:
                   review_status
                 from case_structures
                 where case_id = :case_id
-                order by processed_at desc
+                order by
+                  (material_facts is not null and material_facts <> '{}'::jsonb) desc,
+                  (nullif(btrim(coalesce(facts, '')), '') is not null) desc,
+                  (jsonb_extract_path_text(facets, 'primary_domain') is not null) desc,
+                  (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc,
+                  processed_at desc
                 limit 1
                 """
             ),

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Protocol
 
@@ -31,9 +31,11 @@ class CaseSearchRow:
     facts: str | None
     conclusion: str | None
     outcome: dict[str, Any]
+    facets: dict[str, Any]
     evidence_spans: dict[str, Any]
     review_status: str
     confidence_score: float
+    material_facts: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -115,7 +117,16 @@ class PostgresStatuteSearchRepository:
             text(
                 """
                 select count(*) as total
-                from case_structures
+                from (
+                  select distinct on (case_id) *
+                  from case_structures
+                  order by case_id,
+                    (material_facts is not null and material_facts <> '{}'::jsonb) desc,
+                    (nullif(btrim(coalesce(facts, '')), '') is not null) desc,
+                    (jsonb_extract_path_text(facets, 'primary_domain') is not null) desc,
+                    (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc,
+                    processed_at desc
+                ) case_structures
                 join cases on cases.id = case_structures.case_id
                 where cases.is_deleted = false
                   and case_structures.cited_articles @> cast(:payload as jsonb)
@@ -157,11 +168,22 @@ class PostgresStatuteSearchRepository:
                   case_structures.cited_articles,
                   case_structures.facts,
                   case_structures.conclusion,
+                  case_structures.material_facts,
                   case_structures.outcome,
+                  case_structures.facets,
                   case_structures.evidence_spans,
                   case_structures.review_status,
                   case_structures.confidence_score
-                from case_structures
+                from (
+                  select distinct on (case_id) *
+                  from case_structures
+                  order by case_id,
+                    (material_facts is not null and material_facts <> '{{}}'::jsonb) desc,
+                    (nullif(btrim(coalesce(facts, '')), '') is not null) desc,
+                    (jsonb_extract_path_text(facets, 'primary_domain') is not null) desc,
+                    (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc,
+                    processed_at desc
+                ) case_structures
                 join cases on cases.id = case_structures.case_id
                 where cases.is_deleted = false
                   and case_structures.cited_articles @> cast(:payload as jsonb)
@@ -186,7 +208,9 @@ class PostgresStatuteSearchRepository:
                 cited_articles=_extract_cited_refs(row["cited_articles"]),
                 facts=row["facts"],
                 conclusion=row["conclusion"],
+                material_facts=dict(row["material_facts"] or {}),
                 outcome=dict(row["outcome"] or {}),
+                facets=dict(row["facets"] or {}),
                 evidence_spans=dict(row["evidence_spans"] or {}),
                 review_status=row["review_status"],
                 confidence_score=float(row["confidence_score"]),
@@ -211,11 +235,22 @@ class PostgresStatuteSearchRepository:
                   case_structures.cited_articles,
                   case_structures.facts,
                   case_structures.conclusion,
+                  case_structures.material_facts,
                   case_structures.outcome,
+                  case_structures.facets,
                   case_structures.evidence_spans,
                   case_structures.review_status,
                   case_structures.confidence_score
-                from case_structures
+                from (
+                  select distinct on (case_id) *
+                  from case_structures
+                  order by case_id,
+                    (material_facts is not null and material_facts <> '{}'::jsonb) desc,
+                    (nullif(btrim(coalesce(facts, '')), '') is not null) desc,
+                    (jsonb_extract_path_text(facets, 'primary_domain') is not null) desc,
+                    (jsonb_extract_path_text(facets, 'mvp_relevance') is not null) desc,
+                    processed_at desc
+                ) case_structures
                 join cases on cases.id = case_structures.case_id
                 where cases.is_deleted = false
                 order by case_structures.confidence_score desc, cases.decision_date desc nulls last
@@ -238,7 +273,9 @@ class PostgresStatuteSearchRepository:
                 cited_articles=_extract_cited_refs(row["cited_articles"]),
                 facts=row["facts"],
                 conclusion=row["conclusion"],
+                material_facts=dict(row["material_facts"] or {}),
                 outcome=dict(row["outcome"] or {}),
+                facets=dict(row["facets"] or {}),
                 evidence_spans=dict(row["evidence_spans"] or {}),
                 review_status=row["review_status"],
                 confidence_score=float(row["confidence_score"]),

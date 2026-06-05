@@ -60,6 +60,8 @@ def validate_cases(database_url: str, limit: int | None) -> dict[str, int]:
                 evidence_spans["validation"] = {
                     "status": result.review_status,
                     "reasons": result.reasons,
+                    "categories": result.categories,
+                    "primary_category": result.primary_category,
                 }
                 cursor.execute(
                     """

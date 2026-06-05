@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       {
         detail: {
           code: "SEARCH_API_UNAVAILABLE",
-          message: "Natural search API is unavailable.",
+          message: "자연어 검색 API에 연결할 수 없습니다.",
         },
       },
       { status: 503 }

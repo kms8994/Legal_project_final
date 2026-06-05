@@ -398,10 +398,18 @@ GET /api/v1/cases/{case_id}/compare-candidates?limit=5&require_outcome_differenc
         "event_structure_match": 0.8,
         "issue_similarity": 0.79,
         "statute_overlap": 0.72,
+        "domain_match_score": 1.0,
+        "issue_tag_overlap": 0.8,
         "facet_match_score": 0.9,
         "outcome_difference": 1.0,
         "final_score": 0.84
       },
+      "match_reasons": [
+        "same primary legal domain: damages",
+        "shared issue tags: negligence, causation",
+        "similar material fact structure"
+      ],
+      "caution_reasons": [],
       "common_facts": ["차량 대 보행자 사고", "피해자 과실 여부 다툼"],
       "possible_turning_points": ["무단횡단 인정 여부", "운전자 주의의무 정도"],
       "outcome_difference_summary": "기준 판례는 피해자 과실을 낮게 보았고, 후보 판례는 과실상계를 더 크게 인정했습니다.",
