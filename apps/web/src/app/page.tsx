@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type SearchMode = "statute" | "natural";
 type WorkflowStep = "search" | "candidates" | "comparison";
@@ -500,7 +500,7 @@ function SearchWorkspace({
         </p>
       </div>
 
-      {isLoading ? <LoadingResults /> : null}
+      {isLoading ? <LoadingResults hint="판례를 검색하고 있습니다." /> : null}
 
       {!isLoading && data ? (
         <div className="grid gap-3">
@@ -564,7 +564,7 @@ function CandidateWorkspace({
             </button>
           </div>
         </div>
-        {isLoading ? <LoadingResults /> : null}
+        {isLoading ? <LoadingResults hint="유사 판례 후보를 분석하고 있습니다." /> : null}
         <div className="grid gap-3">
           {candidates.length > 0 ? (
             candidates.map((candidate, index) => (
@@ -623,7 +623,7 @@ function ComparisonWorkspace({
         <CompareSide title="비교 판례" candidate={compareTarget} detail={compareDetail} />
       </div>
 
-      {isLoading ? <div className="mt-4"><LoadingResults /></div> : null}
+      {isLoading ? <div className="mt-4"><LoadingResults hint="AI가 두 판례를 비교 분석하고 있습니다." /></div> : null}
 
       {analysis ? (
         <div className="mt-4 grid gap-4">
@@ -1158,9 +1158,34 @@ function ParsedIntentPanel({ data }: { data: NaturalSearchResponse }) {
   );
 }
 
-function LoadingResults() {
+function LoadingResults({ hint }: { hint?: string }) {
+  const [elapsed, setElapsed] = useState(0);
+  const ref = useRef<ReturnType<typeof setInterval>>();
+  useEffect(() => {
+    setElapsed(0);
+    ref.current = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(ref.current);
+  }, []);
+
+  const message =
+    elapsed >= 25
+      ? "응답이 지연되고 있습니다. 잠시만 더 기다려주세요."
+      : elapsed >= 8
+        ? hint || "AI가 분석 중입니다. 최대 30초 정도 걸릴 수 있습니다."
+        : hint || "불러오는 중입니다.";
+
   return (
     <div className="grid gap-3">
+      <div className="flex items-center gap-3 rounded-[8px] border border-[#d7dce2] bg-white px-5 py-4">
+        <svg className="h-5 w-5 animate-spin text-[#2563eb]" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+        <span className="text-sm text-[#374151]">{message}</span>
+        {elapsed >= 5 && (
+          <span className="ml-auto text-xs tabular-nums text-[#9ca3af]">{elapsed}초</span>
+        )}
+      </div>
       {[0, 1, 2].map((item) => (
         <div className="rounded-[8px] border border-[#d7dce2] bg-white p-5" key={item}>
           <div className="h-4 w-40 animate-pulse rounded bg-[#e5eaf0]" />
