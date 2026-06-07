@@ -51,6 +51,11 @@ class SearchResultCard(BaseModel):
     source_url: str | None = None
     review_status: str
     confidence_score: float
+    # 사전 생성 요약 (없으면 None — 프론트엔드에서 fallback 처리)
+    facts_summary: str | None = None
+    reasoning_summary: str | None = None
+    judgment_summary: str | None = None
+    disposition: str | None = None
 
 
 class SearchEvidenceSnippet(BaseModel):

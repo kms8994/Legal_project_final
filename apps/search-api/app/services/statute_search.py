@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+import time
+import threading
+from typing import TypeVar
 
 from app.core.config import settings
-from pipelines.common.embedding import embed_text, embedding_model_name, vector_literal
 
 from app.repositories.statute_search import CaseSearchRow, StatuteSearchRepository
 from app.schemas.search import (
@@ -21,6 +23,40 @@ from app.services.article_normalizer import ArticleParseError, parse_article_ref
 
 class ArticleNotFoundError(LookupError):
     pass
+
+
+class _TTLCache:
+    """간단한 TTL 인메모리 캐시 (스레드 세이프)."""
+
+    def __init__(self, ttl_seconds: int = 300) -> None:
+        self._ttl = ttl_seconds
+        self._store: dict[str, tuple[object, float]] = {}
+        self._lock = threading.Lock()
+
+    def get(self, key: str) -> object | None:
+        with self._lock:
+            entry = self._store.get(key)
+            if entry is None:
+                return None
+            value, expires_at = entry
+            if time.monotonic() > expires_at:
+                del self._store[key]
+                return None
+            return value
+
+    def set(self, key: str, value: object) -> None:
+        with self._lock:
+            self._store[key] = (value, time.monotonic() + self._ttl)
+
+    def invalidate(self) -> None:
+        with self._lock:
+            self._store.clear()
+
+
+# 자연어 검색용 전체 케이스 목록 (5분 TTL)
+_natural_search_cache: _TTLCache = _TTLCache(ttl_seconds=300)
+# 조문 검색 결과 (3분 TTL)
+_statute_search_cache: _TTLCache = _TTLCache(ttl_seconds=180)
 
 
 @dataclass(frozen=True)
@@ -76,25 +112,31 @@ class StatuteSearchService:
 
     def search_natural(self, *, query: str, page: int, size: int) -> NaturalSearchResponse:
         intent = _parse_intent(query)
-        query_vector = embed_text(
-            query,
-            provider=settings.embedding_provider,
-            model=settings.embedding_model,
-            api_key=settings.openai_api_key,
-        )
-        effective_model = embedding_model_name(
-            provider=settings.embedding_provider,
-            model=settings.embedding_model,
-            api_key=settings.openai_api_key,
-        )
-        embedding_scores = self.repository.embedding_scores_for_query(
-            vector_literal(query_vector),
-            effective_model,
-        )
+        embedding_scores: dict[str, float] = {}
+        try:
+            query_vector = _embed_text(query)
+            if query_vector:
+                embedding_scores = self.repository.embedding_scores_for_query(
+                    _vector_literal(query_vector),
+                    settings.embedding_model,
+                )
+        except Exception:
+            # DB 예외 시 트랜잭션을 rollback해야 같은 커넥션의 다음 쿼리가 정상 실행됨
+            try:
+                self.repository.connection.rollback()  # type: ignore[union-attr]
+            except Exception:
+                pass
+
+        # 전체 케이스 목록은 5분간 캐시 (매 요청 DB full scan 방지)
+        all_rows = _natural_search_cache.get("all_cases")
+        if all_rows is None:
+            all_rows = self.repository.list_cases_for_natural_search()
+            _natural_search_cache.set("all_cases", all_rows)
+
         scored_rows = _rank_rows(
             query,
             intent,
-            self.repository.list_cases_for_natural_search(),
+            all_rows,  # type: ignore[arg-type]
             embedding_scores=embedding_scores,
         )
         offset = (page - 1) * size
@@ -147,7 +189,7 @@ def _to_result_card(
         secondary_domains=_facet_list(row, "secondary_domains"),
         issue_tags=_facet_list(row, "issue_tags"),
         mvp_relevance=row.facets.get("mvp_relevance") if row.facets else None,
-        summary_card=_summary(row),
+        summary_card=row.sum_one_line or _summary(row),
         outcome=row.outcome,
         cited_articles=row.cited_articles,
         score=score if score is not None else max(0.0, min(1.0, confidence - (index * 0.01))),
@@ -165,35 +207,51 @@ def _to_result_card(
         source_url=row.source_url,
         review_status=row.review_status,
         confidence_score=confidence,
+        facts_summary=row.sum_facts,
+        reasoning_summary=row.sum_reasoning,
+        judgment_summary=row.sum_judgment,
+        disposition=row.sum_disposition,
     )
 
 
 def _summary(row: CaseSearchRow) -> str:
     source = _usable_facts(row.facts)
-    if not source:
-        material_summary = _material_fact_summary(row.case_name, row.material_facts)
-        if material_summary:
-            return material_summary
-        return f"이 판례는 {row.case_name} 사건입니다. 사실관계 요약은 아직 준비 중입니다."
-    compact = " ".join(str(source).split())
-    if len(compact) <= 120:
+    if source:
+        return _first_sentences(source, max_chars=160)
+    material_summary = _material_fact_summary(row.case_name, row.material_facts)
+    if material_summary:
+        return material_summary
+    return f"{row.case_name} 사건입니다."
+
+
+def _first_sentences(text: str, max_chars: int = 160) -> str:
+    """한국어 문장 단위로 max_chars 이하로 잘라 반환."""
+    compact = " ".join(text.split())
+    if len(compact) <= max_chars:
         return compact
-    return f"{compact[:117]}..."
+    # '다.' / '요.' / '임.' 기준 문장 분리
+    import re as _re
+    sentences = _re.split(r"(?<=[다요임])\.", compact)
+    result = ""
+    for s in sentences:
+        candidate = (result + s + ".").strip()
+        if len(candidate) > max_chars:
+            break
+        result = candidate
+    return result if result else f"{compact[:max_chars - 3]}..."
 
 
 def _usable_facts(value: str | None) -> str | None:
     compact = " ".join(str(value or "").split())
-    if not compact:
+    if not compact or len(compact) < 20:
         return None
+    # 주문/결론 텍스트가 facts 필드에 섞인 경우 제외
     order_like_markers = (
-        "항소심에서",
         "제1심판결",
         "상고를 기각",
         "항소를 기각",
-        "청구를 기각",
-        "소송비용",
-        "피고는 원고",
-        "원고의 청구",
+        "소송비용은",
+        "원고의 청구를 기각",
     )
     if any(marker in compact for marker in order_like_markers):
         return None
@@ -345,13 +403,27 @@ def _keywords(query: str) -> list[str]:
 def _infer_articles(query: str) -> list[str]:
     inferred: list[str] = []
     rules = [
-        (["750", "\uc81c750", "\ubd88\ubc95\ud589\uc704", "\uc190\ud574\ubc30\uc0c1"], "민법_제750조"),
-        (["751", "\uc81c751", "\uc704\uc790\ub8cc", "\uba85\uc608"], "민법_제751조"),
-        (["756", "\uc81c756", "사용자책임", "사용자 책임", "회사 직원", "업무 중"], "민법_제756조"),
-        (["760", "\uc81c760", "공동불법행위", "공동 불법행위", "여러 사람"], "민법_제760조"),
-        (["393", "\uc81c393", "통상손해", "특별손해", "배상 범위", "손해배상 범위"], "민법_제393조"),
-        (["396", "\uc81c396", "\uacfc\uc2e4\uc0c1\uacc4", "\uacfc\uc2e4", "잘못", "감액", "줄어든"], "민법_제396조"),
-        (["766", "\uc81c766", "소멸시효", "손해배상청구권"], "민법_제766조"),
+        # 민사
+        (["750", "제750", "불법행위", "손해배상"], "민법_제750조"),
+        (["751", "제751", "위자료", "명예훼손"], "민법_제751조"),
+        (["756", "제756", "사용자책임", "사용자 책임", "회사 직원", "업무 중"], "민법_제756조"),
+        (["760", "제760", "공동불법행위", "공동 불법행위", "여러 사람"], "민법_제760조"),
+        (["393", "제393", "통상손해", "특별손해", "배상 범위", "손해배상 범위"], "민법_제393조"),
+        (["396", "제396", "과실상계", "잘못", "감액", "줄어든"], "민법_제396조"),
+        (["766", "제766", "소멸시효", "손해배상청구권"], "민법_제766조"),
+        # 형사 — 형법
+        (["250", "제250", "살인", "살해"], "형법_제250조"),
+        (["257", "제257", "상해죄", "상해 사건"], "형법_제257조"),
+        (["260", "제260", "폭행죄", "폭행"], "형법_제260조"),
+        (["297", "제297", "강간죄", "강간"], "형법_제297조"),
+        (["298", "제298", "강제추행"], "형법_제298조"),
+        (["329", "제329", "절도죄", "절도"], "형법_제329조"),
+        (["347", "제347", "사기죄", "사기", "기망"], "형법_제347조"),
+        (["355", "제355", "횡령", "배임"], "형법_제355조"),
+        (["356", "제356", "업무상횡령", "업무상배임"], "형법_제356조"),
+        (["314", "제314", "업무방해"], "형법_제314조"),
+        # 형사 — 도로교통법
+        (["음주운전", "음주측정", "음주"], "도로교통법_제44조"),
     ]
     lowered = query.lower()
     for needles, article in rules:
@@ -378,17 +450,22 @@ def _expanded_legal_terms(query: str) -> list[str]:
 
 def _infer_domain(query: str) -> str | None:
     rules = [
-        ("damages", ["damage", "damages", "손해", "배상", "불법행위", "교통사고", "위자료"]),
-        ("unjust_enrichment", ["unjust enrichment", "restitution", "부당이득"]),
-        ("lease", ["lease", "deposit", "eviction", "임대차", "보증금", "건물명도", "토지인도"]),
-        ("labor", ["labor", "employment", "wage", "dismissal", "임금", "근로자지위", "해고", "퇴직금", "파견근로"]),
-        ("inheritance", ["inheritance", "estate", "will", "상속", "유류분", "유언"]),
-        ("tax", ["tax", "acquisition tax", "취득세", "조세", "부가가치세", "법인세", "소득세"]),
-        ("property", ["property", "ownership", "mortgage", "소유권", "근저당", "말소등기", "이전등기", "점유"]),
-        ("ip", ["patent", "trademark", "copyright", "특허", "실용신안", "상표", "저작권", "지식재산"]),
-        ("contract", ["contract", "payment", "sale price", "약정금", "매매대금", "물품대금", "공사대금", "채무불이행"]),
-        ("insurance", ["insurance", "subrogation", "보험금", "보험자", "구상금"]),
-        ("family", ["divorce", "custody", "이혼", "재산분할", "친권", "양육"]),
+        # 형사 (먼저 탐지)
+        ("criminal", ["살인", "상해", "폭행", "절도", "사기", "횡령", "배임", "강간", "강제추행",
+                      "음주운전", "공소사실", "범죄사실", "피고인", "징역", "벌금", "집행유예",
+                      "형사", "형법", "업무방해", "마약"]),
+        # 민사
+        ("damages", ["손해", "배상", "불법행위", "교통사고", "위자료"]),
+        ("unjust_enrichment", ["부당이득"]),
+        ("lease", ["임대차", "보증금", "건물명도", "토지인도"]),
+        ("labor", ["임금", "근로자지위", "해고", "퇴직금", "파견근로"]),
+        ("inheritance", ["상속", "유류분", "유언"]),
+        ("tax", ["취득세", "조세", "부가가치세", "법인세", "소득세"]),
+        ("property", ["소유권", "근저당", "말소등기", "이전등기", "점유"]),
+        ("ip", ["특허", "실용신안", "상표", "저작권", "지식재산"]),
+        ("contract", ["약정금", "매매대금", "물품대금", "공사대금", "채무불이행"]),
+        ("insurance", ["보험금", "보험자", "구상금"]),
+        ("family", ["이혼", "재산분할", "친권", "양육"]),
     ]
     lowered = query.lower()
     for domain, terms in rules:
@@ -450,14 +527,17 @@ def _rank_rows(
             "weakly_related": 0.45,
             "out_of_scope": -0.5,
         }.get(str(row.facets.get("mvp_relevance", "")), 0.0) if intent.legal_domain == "damages" else 0.0
+        # 자연어 검색은 "사실관계 유사도"를 최우선 신호로 삼는다.
+        # 의미 기반 임베딩 유사도와 사실관계 텍스트의 키워드 중복을 결합해
+        # facts_similarity로 보고, 나머지(조문/도메인 등)는 보조 신호로만 사용한다.
+        facts_similarity = max(embedding_score, keyword_score)
         score = min(
             1.0,
-            (keyword_score * 0.29)
-            + (article_score * 0.2)
-            + (domain_score * 0.24)
+            (facts_similarity * 0.55)
+            + (domain_score * 0.18)
+            + (article_score * 0.12)
+            + (row.confidence_score * 0.08)
             + (fuzzy_score * 0.04)
-            + (embedding_score * 0.16)
-            + (row.confidence_score * 0.10)
             + (damages_relevance_score * 0.03),
         )
         if score > 0 or not query_terms:
@@ -489,3 +569,18 @@ def _overlap(left: set[str], right: set[str]) -> float:
 def _contains_any(value: str, needles: list[str]) -> bool:
     lowered = value.lower()
     return any(needle in lowered for needle in needles)
+
+
+def _embed_text(text: str) -> list[float] | None:
+    try:
+        from sentence_transformers import SentenceTransformer  # type: ignore[import]
+        model = SentenceTransformer(settings.embedding_model)
+        vector = model.encode(text, normalize_embeddings=True)
+        return vector.tolist()
+    except Exception:
+        return None
+
+
+def _vector_literal(vector: list[float]) -> str:
+    inner = ",".join(str(v) for v in vector)
+    return f"[{inner}]"

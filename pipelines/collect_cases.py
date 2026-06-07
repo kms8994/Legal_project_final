@@ -198,7 +198,10 @@ def build_case_record(item: CaseListItem, detail_payload: Any) -> CaseRecord:
         decision_date=parse_date(first_value(detail, ["선고일자"])) or item.decision_date,
         case_name=optional_str(first_value(detail, ["사건명"])) or item.case_name or "unknown",
         case_type=optional_str(first_value(detail, ["사건종류명"])) or item.case_type,
-        legal_domain="손해배상",
+        legal_domain=_infer_legal_domain_from_case(
+            optional_str(first_value(detail, ["사건명"])) or item.case_name or "",
+            optional_str(first_value(detail, ["사건종류명"])) or item.case_type or "",
+        ),
         source_url=item.source_url,
         raw_text=raw_text,
         raw_html=raw_html,
@@ -391,7 +394,7 @@ def optional_str(value: Any) -> str | None:
 
 
 def build_public_case_url(external_id: str) -> str:
-    return f"https://www.law.go.kr/DRF/lawService.do?target=prec&ID={external_id}&type=HTML"
+    return f"https://www.law.go.kr/판례/{external_id}"
 
 
 def strip_html(value: str) -> str:
@@ -409,6 +412,15 @@ def value_to_text(value: Any) -> str:
     if isinstance(value, dict):
         return " ".join(value_to_text(item) for item in value.values())
     return str(value)
+
+
+def _infer_legal_domain_from_case(case_name: str, case_type: str) -> str:
+    combined = f"{case_name} {case_type}".lower()
+    if any(k in combined for k in ["형사", "피고인", "공소", "살인", "상해", "절도", "사기", "횡령", "강도", "강간", "음주운전"]):
+        return "형사"
+    if any(k in combined for k in ["손해배상", "불법행위", "구상금", "위자료"]):
+        return "손해배상"
+    return "민사"
 
 
 def dedupe_strings(values: list[str]) -> list[str]:

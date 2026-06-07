@@ -63,12 +63,14 @@ def validate_cases(database_url: str, limit: int | None) -> dict[str, int]:
                     "categories": result.categories,
                     "primary_category": result.primary_category,
                 }
+                is_reviewed = result.review_status == "auto_validated"
                 cursor.execute(
                     """
                     update case_structures
                     set review_status = %s,
                         confidence_score = %s,
                         evidence_spans = %s,
+                        is_reviewed = %s,
                         processed_at = now()
                     where id = %s
                     """,
@@ -76,6 +78,7 @@ def validate_cases(database_url: str, limit: int | None) -> dict[str, int]:
                         result.review_status,
                         result.confidence_score,
                         Jsonb(evidence_spans),
+                        is_reviewed,
                         structure_id,
                     ),
                 )
@@ -120,8 +123,11 @@ def validate_cases(database_url: str, limit: int | None) -> dict[str, int]:
 
 
 def load_known_articles(cursor: Any) -> set[str]:
+    from pipelines.common.extract import DEFAULT_KNOWN_ARTICLES
+
     cursor.execute("select normalized_ref from articles")
-    return {row[0] for row in cursor.fetchall()}
+    db_refs = {row[0] for row in cursor.fetchall()}
+    return db_refs | DEFAULT_KNOWN_ARTICLES
 
 
 def parse_known_articles(value: str | None) -> set[str]:

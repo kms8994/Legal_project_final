@@ -128,6 +128,8 @@ def paragraph_evidence(paragraphs: list[Paragraph], section_type: str) -> list[d
 def infer_legal_issue(text: str, cited_articles: list[dict[str, Any]], keywords: list[str]) -> str | None:
     issues: list[str] = []
     refs = [article["normalized_ref"] for article in cited_articles]
+
+    # 민사 쟁점
     if "민법_제750조" in refs:
         issues.append("불법행위 손해배상책임 성립")
     if "민법_제396조" in refs or "과실상계" in keywords:
@@ -138,6 +140,29 @@ def infer_legal_issue(text: str, cited_articles: list[dict[str, Any]], keywords:
         issues.append("손해배상 범위")
     if "자동차손해배상 보장법_제3조" in refs or "교통사고" in text:
         issues.append("자동차 운행자 손해배상책임")
+
+    # 형사 쟁점
+    if "형법_제250조" in refs or "살인" in text:
+        issues.append("살인죄 성립 여부")
+    if "형법_제257조" in refs or "형법_제258조의2" in refs:
+        issues.append("상해죄 성립 및 죄책")
+    if "형법_제260조" in refs or "형법_제261조" in refs:
+        issues.append("폭행죄 성립 여부")
+    if "형법_제347조" in refs or "사기" in text:
+        issues.append("사기죄 성립 및 기망행위")
+    if "형법_제355조" in refs or "형법_제356조" in refs:
+        issues.append("횡령·배임죄 성립 여부")
+    if "형법_제329조" in refs or "형법_제330조" in refs:
+        issues.append("절도죄 성립 여부")
+    if "형법_제297조" in refs or "형법_제298조" in refs:
+        issues.append("성범죄 성립 및 처벌")
+    if "도로교통법_제44조" in refs or "도로교통법_제148조의2" in refs or "음주운전" in text:
+        issues.append("음주운전 성립 및 양형")
+    if "형사소송법_제308조의2" in refs or "위법수집증거" in text:
+        issues.append("위법수집증거 배제 여부")
+    if "양형" in text or "집행유예" in text:
+        issues.append("양형 및 집행유예 적정성")
+
     if issues:
         return ", ".join(issues)
     if keywords:
@@ -151,9 +176,14 @@ def infer_material_facts(
     outcome: dict[str, Any],
 ) -> dict[str, Any]:
     event_type = infer_event_type(text)
+    legal_domain = facets.get("legal_domain", "unknown")
+
+    if legal_domain == "형사":
+        return _infer_criminal_material_facts(text, event_type, outcome)
+
     return {
         "event_type": event_type,
-        "legal_domain": facets.get("legal_domain"),
+        "legal_domain": legal_domain,
         "claim_type": "손해배상" if "손해배상" in text else None,
         "harm_type": facets.get("harm_type"),
         "causation_dispute": contains_any(text, ["인과관계", "상당인과관계"]),
@@ -165,10 +195,75 @@ def infer_material_facts(
     }
 
 
+def _infer_criminal_material_facts(
+    text: str,
+    event_type: str | None,
+    outcome: dict[str, Any],
+) -> dict[str, Any]:
+    import re as _re
+    sentence_term = outcome.get("sentence_term")
+    crime_type = _infer_crime_type(text)
+    return {
+        "event_type": event_type or crime_type,
+        "legal_domain": "형사",
+        "crime_type": crime_type,
+        "sentence_type": outcome.get("sentence_type"),
+        "sentence_term": sentence_term,
+        "suspended": outcome.get("suspended", False),
+        "intent_dispute": contains_any(text, ["고의", "미필적 고의", "과실범", "고의성"]),
+        "causation_dispute": contains_any(text, ["인과관계", "상당인과관계"]),
+        "evidence_issue": contains_any(text, ["위법수집증거", "자백", "증거능력", "증거재판"]),
+        "accomplice_dispute": contains_any(text, ["공동정범", "교사범", "방조범", "공범"]),
+        "sentencing_dispute": contains_any(text, ["양형", "집행유예", "작량감경"]),
+        "key_disputed_fact": _infer_criminal_disputed_fact(text),
+        "outcome_disposition": outcome.get("disposition"),
+    }
+
+
+def _infer_crime_type(text: str) -> str | None:
+    rules = [
+        ("살인", ["살인", "살해", "피살"]),
+        ("상해", ["상해", "부상"]),
+        ("폭행", ["폭행", "폭력"]),
+        ("사기", ["사기", "기망", "편취"]),
+        ("횡령", ["횡령", "업무상횡령"]),
+        ("배임", ["배임", "업무상배임"]),
+        ("절도", ["절도", "절취", "야간주거침입"]),
+        ("강도", ["강도", "강취"]),
+        ("강간", ["강간", "성폭력", "강제추행", "준강간"]),
+        ("음주운전", ["음주운전", "음주측정", "도로교통법"]),
+        ("마약", ["마약", "향정신성", "대마"]),
+        ("업무방해", ["업무방해", "위력"]),
+    ]
+    for crime, keywords in rules:
+        if any(kw in text for kw in keywords):
+            return crime
+    return None
+
+
+def _infer_criminal_disputed_fact(text: str) -> str | None:
+    if contains_any(text, ["고의", "미필적 고의"]):
+        return "범의(고의) 인정 여부"
+    if contains_any(text, ["위법수집증거", "자백의 임의성"]):
+        return "증거능력 및 증거 적법성"
+    if contains_any(text, ["공동정범", "공범"]):
+        return "공동정범 성립 여부"
+    if contains_any(text, ["양형", "집행유예"]):
+        return "적정 양형 판단"
+    return None
+
+
 def infer_domain_facets(text: str, case_name: str | None) -> dict[str, Any]:
     title = case_name or ""
     combined = f"{title} {text}"
     rules = [
+        # 형사 (우선 배치 — 민사 키워드와 겹칠 수 있어 먼저 탐지)
+        ("criminal_violent", ["살인", "상해", "폭행", "강도", "강간", "강제추행"]),
+        ("criminal_property", ["절도", "사기", "횡령", "배임", "재물손괴"]),
+        ("criminal_traffic", ["음주운전", "도로교통법", "교통사고처리특례법"]),
+        ("criminal_drug", ["마약", "향정신성", "대마초"]),
+        ("criminal_general", ["공소사실", "범죄사실", "피고인", "징역", "벌금", "집행유예"]),
+        # 민사
         ("damages", ["손해배상", "불법행위", "위자료", "교통사고", "과실상계", "구상금"]),
         ("unjust_enrichment", ["부당이득", "부당이득금"]),
         ("lease", ["임대차", "보증금", "건물명도", "토지인도", "인도청구"]),
@@ -194,6 +289,7 @@ def infer_domain_facets(text: str, case_name: str | None) -> dict[str, Any]:
 
 def infer_issue_tags(text: str) -> list[str]:
     rules = [
+        # 민사
         ("causation", ["인과관계", "상당인과관계"]),
         ("negligence", ["과실", "주의의무", "과실상계"]),
         ("damages_amount", ["손해액", "배상액", "일실수입", "치료비"]),
@@ -206,6 +302,13 @@ def infer_issue_tags(text: str) -> list[str]:
         ("inheritance_share", ["유류분", "상속분"]),
         ("tax_assessment", ["처분취소", "취득세", "과세"]),
         ("insurance_subrogation", ["구상금", "보험자", "대위"]),
+        # 형사
+        ("criminal_intent", ["고의", "미필적 고의", "범의"]),
+        ("criminal_evidence", ["위법수집증거", "자백", "증거능력"]),
+        ("criminal_accomplice", ["공동정범", "공범", "교사범", "방조범"]),
+        ("criminal_sentencing", ["양형", "집행유예", "작량감경"]),
+        ("criminal_selfdefense", ["정당방위", "긴급피난"]),
+        ("criminal_drunk_driving", ["음주운전", "음주측정"]),
     ]
     return [tag for tag, terms in rules if any(term in text for term in terms)]
 
@@ -313,6 +416,22 @@ def infer_mvp_relevance(
 
 
 def infer_event_type(text: str) -> str | None:
+    # 형사
+    if contains_any(text, ["살인", "살해", "피살"]):
+        return "살인"
+    if contains_any(text, ["강간", "강제추행", "성폭력"]):
+        return "성범죄"
+    if contains_any(text, ["음주운전", "음주측정"]):
+        return "음주운전"
+    if contains_any(text, ["사기", "기망", "편취"]):
+        return "사기"
+    if contains_any(text, ["횡령", "배임"]):
+        return "횡령·배임"
+    if contains_any(text, ["절도", "절취"]):
+        return "절도"
+    if contains_any(text, ["상해", "폭행"]):
+        return "상해·폭행"
+    # 민사
     if contains_any(text, ["교통사고", "자동차", "차량", "운행"]):
         return "교통사고"
     if contains_any(text, ["사용자책임", "피용자", "사무집행"]):
@@ -332,6 +451,13 @@ def infer_aggravating_factors(text: str) -> list[str]:
         factors.append("가해 행위의 고의성 또는 중대성")
     if contains_any(text, ["주의의무 위반", "전방주시", "안전조치"]):
         factors.append("주의의무 위반")
+    # 형사 가중 요소
+    if contains_any(text, ["누범", "전과", "동종 전력"]):
+        factors.append("누범 또는 동종 전과")
+    if contains_any(text, ["범행 후 도주", "증거 인멸", "도주"]):
+        factors.append("범행 후 도주 또는 증거인멸")
+    if contains_any(text, ["피해 회복 없음", "합의 거부", "피해자 미합의"]):
+        factors.append("피해 미회복 및 합의 미성립")
     return factors
 
 
@@ -341,11 +467,21 @@ def infer_mitigating_factors(text: str) -> list[str]:
         factors.append("피해자 과실 또는 과실상계")
     if contains_any(text, ["입증 부족", "증거 부족"]):
         factors.append("손해 또는 인과관계 입증 부족")
+    # 형사 감경 요소
+    if contains_any(text, ["초범", "전과 없음", "전과 없"]):
+        factors.append("초범 또는 전과 없음")
+    if contains_any(text, ["자백", "반성", "자수"]):
+        factors.append("자백 또는 진지한 반성")
+    if contains_any(text, ["피해 변제", "합의", "피해 회복"]):
+        factors.append("피해 변제 또는 합의")
+    if contains_any(text, ["집행유예", "작량감경"]):
+        factors.append("집행유예 또는 작량감경 사유")
     return factors
 
 
 def infer_key_disputed_facts(text: str) -> list[str]:
     disputed: list[str] = []
+    # 민사
     if contains_any(text, ["과실상계", "피해자 과실"]):
         disputed.append("피해자 과실 및 과실상계 비율")
     if contains_any(text, ["인과관계", "상당인과관계"]):
@@ -354,6 +490,13 @@ def infer_key_disputed_facts(text: str) -> list[str]:
         disputed.append("손해 범위와 손해액 산정")
     if contains_any(text, ["입증", "증거 부족"]):
         disputed.append("주장 사실의 입증 정도")
+    # 형사
+    if contains_any(text, ["고의", "미필적 고의", "범의"]):
+        disputed.append("범의(고의) 인정 여부")
+    if contains_any(text, ["위법수집증거", "자백의 임의성"]):
+        disputed.append("증거능력 및 위법수집증거 배제")
+    if contains_any(text, ["공동정범", "공범 관계"]):
+        disputed.append("공동정범 성립 범위")
     return disputed
 
 

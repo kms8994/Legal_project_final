@@ -65,6 +65,9 @@ class CompareCandidateRecord:
     facets: dict[str, Any]
     evidence_spans: dict[str, Any]
     confidence_score: float
+    facts_summary: str | None = None
+    reasoning_summary: str | None = None
+    judgment_summary: str | None = None
 
 
 class CaseDetailRepository(Protocol):
@@ -77,10 +80,18 @@ class CaseDetailRepository(Protocol):
     def list_paragraphs(self, case_id: str) -> list[CaseParagraphRecord]:
         ...
 
-    def list_compare_candidates(self, case_id: str) -> list[CompareCandidateRecord]:
+    def list_compare_candidates(
+        self,
+        case_id: str,
+        *,
+        candidate_ids: list[str] | None = None,
+    ) -> list[CompareCandidateRecord]:
         ...
 
     def embedding_similarities_for_case(self, case_id: str, embedding_model: str) -> dict[str, float]:
+        ...
+
+    def top_embedding_case_ids(self, case_id: str, embedding_model: str, topn: int = 60) -> list[str]:
         ...
 
 
@@ -208,10 +219,20 @@ class PostgresCaseDetailRepository:
             for row in rows
         ]
 
-    def list_compare_candidates(self, case_id: str) -> list[CompareCandidateRecord]:
+    def list_compare_candidates(
+        self,
+        case_id: str,
+        *,
+        candidate_ids: list[str] | None = None,
+    ) -> list[CompareCandidateRecord]:
+        if candidate_ids:
+            id_literals = ",".join(f"'{c}'" for c in candidate_ids)
+            candidate_filter = f"and cases.id::text = any(array[{id_literals}])"
+        else:
+            candidate_filter = ""
         rows = self.connection.execute(
             text(
-                """
+                f"""
                 with latest_structures as (
                   select distinct on (case_id)
                     case_id,
@@ -242,11 +263,16 @@ class PostgresCaseDetailRepository:
                   latest_structures.cited_articles,
                   latest_structures.facets,
                   latest_structures.evidence_spans,
-                  latest_structures.confidence_score
+                  latest_structures.confidence_score,
+                  case_summaries.facts_summary,
+                  case_summaries.reasoning_summary,
+                  case_summaries.judgment_summary
                 from latest_structures
                 join cases on cases.id = latest_structures.case_id
+                left join case_summaries on case_summaries.case_id = latest_structures.case_id
                 where cases.id <> :case_id
                   and cases.is_deleted = false
+                  {candidate_filter}
                 """
             ),
             {"case_id": case_id},
@@ -269,14 +295,24 @@ class PostgresCaseDetailRepository:
                 facets=_dict(row["facets"]),
                 evidence_spans=_dict(row["evidence_spans"]),
                 confidence_score=float(row["confidence_score"]),
+                facts_summary=row["facts_summary"],
+                reasoning_summary=row["reasoning_summary"],
+                judgment_summary=row["judgment_summary"],
             )
             for row in rows
         ]
 
-    def embedding_similarities_for_case(self, case_id: str, embedding_model: str) -> dict[str, float]:
+    def embedding_similarities_for_case(
+        self,
+        case_id: str,
+        embedding_model: str,
+        *,
+        topn: int | None = None,
+    ) -> dict[str, float]:
+        limit_clause = f"limit {int(topn)}" if topn else ""
         rows = self.connection.execute(
             text(
-                """
+                f"""
                 select
                   candidate.case_id::text,
                   greatest(0.0, 1.0 - (base.embedding <=> candidate.embedding)) as score
@@ -292,11 +328,43 @@ class PostgresCaseDetailRepository:
                   and base.needs_regeneration = false
                   and candidate.needs_regeneration = false
                   and cases.is_deleted = false
+                order by base.embedding <=> candidate.embedding
+                {limit_clause}
                 """
             ),
             {"case_id": case_id, "embedding_model": embedding_model},
         ).all()
-        return {case_id: float(score) for case_id, score in rows}
+        return {row[0]: float(row[1]) for row in rows}
+
+    def top_embedding_case_ids(
+        self,
+        case_id: str,
+        embedding_model: str,
+        topn: int = 60,
+    ) -> list[str]:
+        rows = self.connection.execute(
+            text(
+                """
+                select candidate.case_id::text
+                from case_embeddings base
+                join case_embeddings candidate
+                  on candidate.embedding_type = base.embedding_type
+                 and candidate.embedding_model = base.embedding_model
+                 and candidate.case_id <> base.case_id
+                join cases on cases.id = candidate.case_id
+                where base.case_id = :case_id
+                  and base.embedding_type = 'combined'
+                  and base.embedding_model = :embedding_model
+                  and base.needs_regeneration = false
+                  and candidate.needs_regeneration = false
+                  and cases.is_deleted = false
+                order by base.embedding <=> candidate.embedding
+                limit :topn
+                """
+            ),
+            {"case_id": case_id, "embedding_model": embedding_model, "topn": topn},
+        ).all()
+        return [row[0] for row in rows]
 
 
 def _dict(value: Any) -> dict[str, Any]:

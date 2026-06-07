@@ -7,6 +7,10 @@ node_modules/
 .next/
 *.tsbuildinfo
 
+*.log
+*.err.log
+*.out.log
+
 data/api_samples/*.json
 data/api_samples/*.html
 data/api_samples/*.xml

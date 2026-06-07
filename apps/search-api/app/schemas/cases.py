@@ -113,6 +113,9 @@ class CompareCandidate(BaseModel):
     outcome_difference_summary: str
     relaxation_level: int = 0
     evidence_ids: list[str] = Field(default_factory=list)
+    facts_summary: str | None = None
+    reasoning_summary: str | None = None
+    judgment_summary: str | None = None
 
 
 class RelaxationAttempt(BaseModel):

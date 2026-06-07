@@ -5,8 +5,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.repositories.cases import CaseDetailRepository, CaseStructureRecord, CompareCandidateRecord
-from app.services.gemini import GeminiGenerationError, generate_case_summary
-from pipelines.common.embedding import embedding_model_name
+from app.services.gemini import GeminiGenerationError, generate_case_summary, generate_compare_analysis
 from app.schemas.cases import (
     CaseDetailResponse,
     CaseMeta,
@@ -191,15 +190,12 @@ class CaseDetailService:
         if structure is None:
             structure = _empty_structure()
 
-        effective_model = embedding_model_name(
-            provider=settings.embedding_provider,
-            model=settings.embedding_model,
-            api_key=settings.openai_api_key,
-        )
-        embedding_scores = self.repository.embedding_similarities_for_case(case_id, effective_model)
+        top_ids = self.repository.top_embedding_case_ids(case_id, settings.embedding_model, topn=60)
+        candidate_ids = top_ids if top_ids else None
+        embedding_scores = self.repository.embedding_similarities_for_case(case_id, settings.embedding_model)
         candidates = [
             _to_candidate(structure, row, embedding_score=embedding_scores.get(row.case_id))
-            for row in self.repository.list_compare_candidates(case_id)
+            for row in self.repository.list_compare_candidates(case_id, candidate_ids=candidate_ids)
         ]
         if require_outcome_difference:
             candidates = [
@@ -254,6 +250,47 @@ class CaseDetailService:
         base_evidence_ids = _evidence_ids(base_structure.evidence_spans)
         compare_evidence_ids = _evidence_ids(compare_structure.evidence_spans)
 
+        fallback_analysis = CompareAnalysis(
+            common_points=_common_points(
+                base_structure,
+                compare_structure,
+                base_evidence_ids,
+                compare_evidence_ids,
+            ),
+            material_differences=_material_differences(
+                base_structure,
+                compare_structure,
+                base_evidence_ids,
+                compare_evidence_ids,
+            ),
+            turning_points=_analysis_turning_points(
+                base_structure,
+                compare_structure,
+                base_evidence_ids,
+                compare_evidence_ids,
+            ),
+            result_difference=_outcome_summary(
+                base_structure.outcome,
+                compare_structure.outcome,
+            ),
+            generated_by="structured_fallback",
+            fallback_used=True,
+            fallback_reason="LLM_NOT_CONFIGURED",
+        )
+
+        base_evidence_links = _evidence_links(base_paragraphs, base_evidence_ids)
+        compare_evidence_links = _evidence_links(compare_paragraphs, compare_evidence_ids)
+
+        analysis = _gemini_compare_or_fallback(
+            base_case_no=base_case.case_no,
+            compare_case_no=compare_case.case_no,
+            base_structure=base_structure,
+            compare_structure=compare_structure,
+            base_evidence_ids=base_evidence_ids,
+            compare_evidence_ids=compare_evidence_ids,
+            fallback=fallback_analysis,
+        )
+
         return CompareResponse(
             base=CompareCaseSummary(
                 case_id=base_case.case_id,
@@ -269,40 +306,14 @@ class CaseDetailService:
                 decision_date=compare_case.decision_date,
                 outcome=compare_structure.outcome,
             ),
-            analysis=CompareAnalysis(
-                common_points=_common_points(
-                    base_structure,
-                    compare_structure,
-                    base_evidence_ids,
-                    compare_evidence_ids,
-                ),
-                material_differences=_material_differences(
-                    base_structure,
-                    compare_structure,
-                    base_evidence_ids,
-                    compare_evidence_ids,
-                ),
-                turning_points=_analysis_turning_points(
-                    base_structure,
-                    compare_structure,
-                    base_evidence_ids,
-                    compare_evidence_ids,
-                ),
-                result_difference=_outcome_summary(
-                    base_structure.outcome,
-                    compare_structure.outcome,
-                ),
-                generated_by="structured_fallback",
-                fallback_used=True,
-                fallback_reason="LLM_NOT_CONFIGURED",
-            ),
+            analysis=analysis,
             evidence_links=CompareEvidenceLinks(
-                base=_evidence_links(base_paragraphs, base_evidence_ids),
-                compare=_evidence_links(compare_paragraphs, compare_evidence_ids),
+                base=base_evidence_links,
+                compare=compare_evidence_links,
             ),
             disclaimer=(
-                "CaseLens comparison analysis is for reference only and does not replace "
-                "legal judgment or review of the official source text."
+                "CaseLens 비교 분석은 참고용이며 공식 판결문 원문을 대체하지 않습니다. "
+                "실제 법률 판단은 반드시 전문가와 함께 원문을 확인하세요."
             ),
         )
 
@@ -355,24 +366,48 @@ def _to_candidate(
         domain_match_score=domain_match_score,
         issue_tag_overlap=issue_tag_overlap,
     )
-    final_score = _clamp(
-        (material_fact_match * 0.30)
-        + (event_structure_match * 0.12)
-        + (issue_similarity * 0.12)
-        + (statute_overlap * 0.10)
-        + (domain_match_score * 0.15)
-        + (issue_tag_overlap * 0.20)
-        + (facet_match_score * 0.03)
-        + ((embedding_score or 0.0) * 0.02)
-        + (outcome_difference * 0.02)
-        + (_clamp(row.confidence_score) * 0.01)
-        - _compare_candidate_penalty(
-            base,
-            row,
-            material_fact_match=material_fact_match,
-            issue_tag_overlap=issue_tag_overlap,
-        )
+    has_material_facts = bool(base.material_facts) and bool(row.material_facts)
+    has_facets = bool(base.facets) and bool(row.facets)
+    base_primary_domain, _ = _domain_values(base.facets)
+    row_primary_domain, _ = _domain_values(row.facets)
+    has_domain = bool(base_primary_domain) and bool(row_primary_domain)
+    has_legal_issue = bool((base.legal_issue or "").strip()) and bool((row.legal_issue or "").strip())
+    has_articles = bool(base.cited_articles) and bool(row.cited_articles)
+    has_outcome = bool(base.outcome) and bool(row.outcome)
+
+    # 구조화 데이터(material_facts/facets/domain 등)가 비어있는 판례가 많아,
+    # 항상 같은 가중치로 합산하면 "없어서 0"인 성분이 점수를 끌어내려
+    # 유사도가 사실상 의미 없는 숫자가 된다. 실제로 데이터가 존재하는
+    # 성분의 가중치만 모아 정규화함으로써, 있는 신호로 점수를 매긴다.
+    weighted_components: list[tuple[float, float, bool]] = [
+        (material_fact_match, 0.30, has_material_facts),
+        (event_structure_match, 0.12, True),
+        (issue_similarity, 0.12, has_legal_issue),
+        (statute_overlap, 0.10, has_articles),
+        (domain_match_score, 0.15, has_domain),
+        (issue_tag_overlap, 0.20, has_facets),
+        (facet_match_score, 0.03, has_domain or has_facets),
+        ((embedding_score or 0.0), 0.02, embedding_score is not None),
+        (outcome_difference, 0.02, has_outcome),
+        (_clamp(row.confidence_score), 0.01, True),
+    ]
+    available_weight = sum(weight for _, weight, available in weighted_components if available)
+    if available_weight > 0:
+        weighted_score = sum(
+            value * weight for value, weight, available in weighted_components if available
+        ) / available_weight
+    else:
+        weighted_score = 0.0
+    penalty = _compare_candidate_penalty(
+        base,
+        row,
+        material_fact_match=material_fact_match,
+        issue_tag_overlap=issue_tag_overlap,
     )
+    # 페널티가 양의 신호(예: 조문 일치)를 완전히 잠식해 0%로 보이지 않도록,
+    # 가중합의 최대 절반까지만 깎는다.
+    capped_penalty = min(penalty, weighted_score * 0.5)
+    final_score = _clamp(weighted_score - capped_penalty)
 
     return CompareCandidate(
         case_id=row.case_id,
@@ -400,6 +435,9 @@ def _to_candidate(
         outcome_difference_summary=_outcome_summary(base.outcome, row.outcome),
         relaxation_level=0,
         evidence_ids=_evidence_ids(row.evidence_spans),
+        facts_summary=row.facts_summary,
+        reasoning_summary=row.reasoning_summary,
+        judgment_summary=row.judgment_summary,
     )
 
 
@@ -757,18 +795,72 @@ def _outcome_differs(left: dict[str, Any], right: dict[str, Any]) -> bool:
 
 def _common_material_facts(left: dict[str, Any], right: dict[str, Any]) -> list[str]:
     return [
-        f"{key}: {left[key]}"
+        f"{_label(key)}: {_value_ko(left[key])}"
         for key in sorted(set(left) & set(right))
-        if left[key] == right[key]
+        if left[key] == right[key] and left[key] not in (None, "", "unknown", False)
     ][:5]
 
 
 def _turning_points(left: dict[str, Any], right: dict[str, Any]) -> list[str]:
     return [
-        f"{key}: {left.get(key)} vs {right.get(key)}"
+        f"{_label(key)}: {_value_ko(left.get(key))} → {_value_ko(right.get(key))}"
         for key in sorted(set(left) & set(right))
         if left.get(key) != right.get(key)
     ][:5]
+
+
+_FIELD_LABEL: dict[str, str] = {
+    "claim_type": "청구 유형",
+    "event_type": "사건 유형",
+    "legal_domain": "법률 분야",
+    "harm_type": "손해 유형",
+    "evidence_issue": "증거 쟁점",
+    "causation_dispute": "인과관계 다툼",
+    "negligence_dispute": "과실 다툼",
+    "damage_scope_dispute": "손해 범위 다툼",
+    "key_disputed_fact": "핵심 다툼 사실",
+    "outcome_disposition": "판결 결과",
+    "direction": "판결 방향",
+    "disposition": "주문",
+    "key_factor": "주요 판단 요소",
+    "ratio_or_percentage": "비율",
+    "primary_domain": "주요 법률 분야",
+    "confidence": "신뢰도",
+}
+
+_VALUE_LABEL: dict[str, str] = {
+    "True": "있음",
+    "False": "없음",
+    "true": "있음",
+    "false": "없음",
+    "damages": "손해배상",
+    "injury": "신체 침해",
+    "property": "재산 피해",
+    "wrongful_death": "사망",
+    "traffic_accident": "교통사고",
+    "medical_malpractice": "의료 과실",
+    "product_liability": "제조물 책임",
+    "civil": "민사",
+    "criminal": "형사",
+    "administrative": "행정",
+    "labor": "노동",
+    "family": "가사",
+    "commercial": "상사",
+    "plaintiff_wins": "원고 승",
+    "defendant_wins": "피고 승",
+    "partial": "일부 인용",
+    "dismissed": "기각",
+    "unknown": "미확인",
+}
+
+
+def _label(key: str) -> str:
+    return _FIELD_LABEL.get(key, key)
+
+
+def _value_ko(value: Any) -> str:
+    s = str(value)
+    return _VALUE_LABEL.get(s, s)
 
 
 def _common_points(
@@ -781,7 +873,7 @@ def _common_points(
     compare_domain, _ = _domain_values(compare.facets)
     claims = [
         EvidenceLinkedClaim(
-            text=f"Both cases share material fact `{key}` with value `{base.material_facts[key]}`.",
+            text=f"두 판례 모두 {_label(key)}가 '{_value_ko(base.material_facts[key])}'로 동일합니다.",
             evidence_ids=EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2]),
         )
         for key in sorted(set(base.material_facts) & set(compare.material_facts))
@@ -791,14 +883,14 @@ def _common_points(
         shared = sorted(set(base.cited_articles) & set(compare.cited_articles))
         claims.append(
             EvidenceLinkedClaim(
-                text=f"Both cases cite overlapping statutes: {', '.join(shared)}.",
+                text=f"두 판례 모두 {', '.join(shared)}을(를) 공통으로 인용하고 있습니다.",
                 evidence_ids=EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2]),
             )
         )
     if base_domain and base_domain == compare_domain:
         claims.append(
             EvidenceLinkedClaim(
-                text=f"Both cases are classified under legal domain `{base_domain}`.",
+                text=f"두 판례 모두 '{base_domain}' 분야로 분류됩니다.",
                 evidence_ids=EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2]),
             )
         )
@@ -806,7 +898,7 @@ def _common_points(
     if shared_tags:
         claims.append(
             EvidenceLinkedClaim(
-                text=f"Both cases share issue tags: {', '.join(shared_tags)}.",
+                text=f"두 판례는 쟁점 태그 '{', '.join(shared_tags)}'를 공유합니다.",
                 evidence_ids=EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2]),
             )
         )
@@ -823,12 +915,10 @@ def _material_differences(
     compare_domain, _ = _domain_values(compare.facets)
     differences = [
         MaterialDifference(
-            factor=key,
-            base=str(base.material_facts.get(key)),
-            compare=str(compare.material_facts.get(key)),
-            meaning=(
-                f"The `{key}` difference may affect how close the candidate is to the base case."
-            ),
+            factor=_label(key),
+            base=_value_ko(base.material_facts.get(key)),
+            compare=_value_ko(compare.material_facts.get(key)),
+            meaning=f"'{_label(key)}' 항목의 차이가 두 판례의 결론 차이에 영향을 미쳤을 수 있습니다.",
             evidence_ids=EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2]),
         )
         for key in sorted(set(base.material_facts) & set(compare.material_facts))
@@ -837,10 +927,10 @@ def _material_differences(
     if base_domain and compare_domain and base_domain != compare_domain:
         differences.append(
             MaterialDifference(
-                factor="primary_domain",
+                factor="주요 법률 분야",
                 base=base_domain,
                 compare=compare_domain,
-                meaning="Different legal domains make this candidate weaker for direct comparison.",
+                meaning="법률 분야가 달라 직접 비교 시 주의가 필요합니다.",
                 evidence_ids=EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2]),
             )
         )
@@ -856,9 +946,7 @@ def _analysis_turning_points(
     points = [
         TurningPoint(
             title=difference.factor,
-            explanation=(
-                f"Base has `{difference.base}`, while compare has `{difference.compare}`."
-            ),
+            explanation=f"기준 판례는 '{difference.base}', 비교 판례는 '{difference.compare}'으로 서로 다릅니다.",
             evidence_ids=difference.evidence_ids,
         )
         for difference in _material_differences(
@@ -869,10 +957,10 @@ def _analysis_turning_points(
         )
     ]
     outcome = _outcome_summary(base.outcome, compare.outcome)
-    if outcome != "No structured outcome difference was detected.":
+    if outcome:
         points.append(
             TurningPoint(
-                title="Outcome",
+                title="판결 결과",
                 explanation=outcome,
                 evidence_ids=EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2]),
             )
@@ -881,14 +969,111 @@ def _analysis_turning_points(
 
 
 def _outcome_summary(left: dict[str, Any], right: dict[str, Any]) -> str:
+    _key_map = {
+        "direction": "판결 방향",
+        "disposition": "주문",
+        "key_factor": "주요 판단 요소",
+        "ratio_or_percentage": "비율",
+    }
     differences = [
-        f"{key}: {left.get(key)} vs {right.get(key)}"
+        f"{_key_map.get(key, key)}: 기준 판례 '{left.get(key)}' / 비교 판례 '{right.get(key)}'"
         for key in ("direction", "disposition", "key_factor", "ratio_or_percentage")
         if left.get(key) and right.get(key) and left.get(key) != right.get(key)
     ]
     if not differences:
-        return "No structured outcome difference was detected."
-    return "; ".join(differences)
+        return "구조화된 판결 결과 차이가 확인되지 않았습니다."
+    return " · ".join(differences)
+
+
+def _gemini_compare_or_fallback(
+    *,
+    base_case_no: str,
+    compare_case_no: str,
+    base_structure: CaseStructureRecord,
+    compare_structure: CaseStructureRecord,
+    base_evidence_ids: list[str],
+    compare_evidence_ids: list[str],
+    fallback: CompareAnalysis,
+) -> CompareAnalysis:
+    if not settings.gemini_api_key:
+        return fallback
+
+    try:
+        generated = generate_compare_analysis(
+            api_key=settings.gemini_api_key,
+            model=settings.gemini_model,
+            base_case_no=base_case_no,
+            compare_case_no=compare_case_no,
+            structured_fields={
+                "base": {
+                    "material_facts": base_structure.material_facts,
+                    "outcome": base_structure.outcome,
+                    "cited_articles": base_structure.cited_articles,
+                    "facts": base_structure.facts,
+                    "legal_issue": base_structure.legal_issue,
+                    "conclusion": base_structure.conclusion,
+                },
+                "compare": {
+                    "material_facts": compare_structure.material_facts,
+                    "outcome": compare_structure.outcome,
+                    "cited_articles": compare_structure.cited_articles,
+                    "facts": compare_structure.facts,
+                    "legal_issue": compare_structure.legal_issue,
+                    "conclusion": compare_structure.conclusion,
+                },
+            },
+        )
+    except GeminiGenerationError as exc:
+        fallback.fallback_reason = f"GEMINI_GENERATION_FAILED: {_summary(str(exc))}"
+        return fallback
+
+    ev_pair = EvidenceIdPair(base=base_evidence_ids[:2], compare=compare_evidence_ids[:2])
+
+    raw_common = generated.get("common_points") or []
+    common_points = [
+        EvidenceLinkedClaim(
+            text=item.get("text", "") if isinstance(item, dict) else str(item),
+            evidence_ids=ev_pair,
+        )
+        for item in raw_common
+        if item
+    ] or fallback.common_points
+
+    raw_diffs = generated.get("material_differences") or []
+    material_differences = [
+        MaterialDifference(
+            factor=item.get("factor", ""),
+            base=item.get("base", ""),
+            compare=item.get("compare", ""),
+            meaning=item.get("meaning", ""),
+            evidence_ids=ev_pair,
+        )
+        for item in raw_diffs
+        if isinstance(item, dict) and item.get("factor")
+    ] or fallback.material_differences
+
+    raw_turning = generated.get("turning_points") or []
+    turning_points = [
+        TurningPoint(
+            title=item.get("title", ""),
+            explanation=item.get("explanation", ""),
+            evidence_ids=ev_pair,
+        )
+        for item in raw_turning
+        if isinstance(item, dict) and item.get("title")
+    ] or fallback.turning_points
+
+    result_difference = (generated.get("result_difference") or "").strip() or fallback.result_difference
+
+    return CompareAnalysis(
+        common_points=common_points,
+        material_differences=material_differences,
+        turning_points=turning_points,
+        result_difference=result_difference,
+        generated_by=settings.gemini_model,
+        fallback_used=False,
+        fallback_reason=None,
+    )
 
 
 def _evidence_ids(evidence_spans: dict[str, Any]) -> list[str]:

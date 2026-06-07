@@ -23,6 +23,11 @@ type SearchResult = {
   source_url: string | null;
   review_status: string;
   confidence_score: number;
+  // 사전 생성 요약 (없으면 null)
+  facts_summary: string | null;
+  reasoning_summary: string | null;
+  judgment_summary: string | null;
+  disposition: string | null;
 };
 
 type EvidenceSnippet = {
@@ -121,6 +126,9 @@ type CompareCandidate = {
   possible_turning_points: string[];
   outcome_difference_summary: string;
   evidence_ids: string[];
+  facts_summary: string | null;
+  reasoning_summary: string | null;
+  judgment_summary: string | null;
 };
 
 type CompareAnalysis = {
@@ -139,19 +147,28 @@ type CompareAnalysis = {
     outcome: Record<string, unknown>;
   };
   analysis: {
-    common_points: Array<{ text: string }>;
+    common_points: Array<{ text: string; evidence_ids?: { base: string[]; compare: string[] } }>;
     material_differences: Array<{
       factor: string;
       base: string;
       compare: string;
       meaning: string;
+      evidence_ids?: { base: string[]; compare: string[] };
     }>;
     turning_points: Array<{
       title: string;
       explanation: string;
+      evidence_ids?: { base: string[]; compare: string[] };
     }>;
     result_difference: string;
+    generated_by?: string;
+    fallback_used?: boolean;
   };
+  evidence_links?: {
+    base: Array<{ evidence_id: string; section_type: string; text: string }>;
+    compare: Array<{ evidence_id: string; section_type: string; text: string }>;
+  };
+  disclaimer?: string;
 };
 
 type ErrorResponse = {
@@ -186,6 +203,11 @@ const MATERIAL_LABELS: Record<string, string> = {
   damage_scope_dispute: "손해 범위 다툼",
   key_disputed_fact: "핵심 다툼",
   outcome_disposition: "판결 결과",
+  direction: "판결 방향",
+  disposition: "주문",
+  key_factor: "주요 판단 요소",
+  ratio_or_percentage: "비율",
+  confidence: "신뢰도",
 };
 
 export default function Home() {
@@ -194,7 +216,6 @@ export default function Home() {
   const [data, setData] = useState<StatuteSearchResponse | NaturalSearchResponse | null>(null);
   const [baseCase, setBaseCase] = useState<SearchResult | null>(null);
   const [baseDetail, setBaseDetail] = useState<CaseDetail | null>(null);
-  const [resultDetails, setResultDetails] = useState<Record<string, CaseDetail>>({});
   const [candidates, setCandidates] = useState<CompareCandidate[]>([]);
   const [compareTarget, setCompareTarget] = useState<CompareCandidate | null>(null);
   const [compareDetail, setCompareDetail] = useState<CaseDetail | null>(null);
@@ -230,7 +251,6 @@ export default function Home() {
 
   function resetFlow() {
     setData(null);
-    setResultDetails({});
     setBaseCase(null);
     setBaseDetail(null);
     setCandidates([]);
@@ -247,7 +267,6 @@ export default function Home() {
     setError(null);
     setBaseCase(null);
     setBaseDetail(null);
-    setResultDetails({});
     setCandidates([]);
     setCompareTarget(null);
     setCompareDetail(null);
@@ -267,31 +286,12 @@ export default function Home() {
       }
       const nextData = payload as StatuteSearchResponse | NaturalSearchResponse;
       setData(nextData);
-      void hydrateResultDetails(nextData.results);
     } catch (caught) {
       setData(null);
       setError(caught instanceof Error ? caught.message : "검색에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
-  }
-
-  async function hydrateResultDetails(resultsToHydrate: SearchResult[]) {
-    const topResults = resultsToHydrate.slice(0, 10);
-    const settled = await Promise.allSettled(
-      topResults.map(async (result) => {
-        const response = await fetch(`/api/cases/${result.case_id}`);
-        if (!response.ok) throw new Error(result.case_id);
-        return [result.case_id, (await response.json()) as CaseDetail] as const;
-      })
-    );
-    const nextDetails: Record<string, CaseDetail> = {};
-    settled.forEach((item) => {
-      if (item.status === "fulfilled") {
-        nextDetails[item.value[0]] = item.value[1];
-      }
-    });
-    setResultDetails(nextDetails);
   }
 
   async function selectBaseCase(result: SearchResult) {
@@ -354,22 +354,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-[#17191d]">
-      <header className="border-b border-[#d7dce2] bg-white">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-8">
-            <button className="text-xl font-bold text-[#111827]" onClick={resetFlow} type="button">
-              CaseLens
-            </button>
-            <nav className="hidden items-center gap-5 text-sm font-medium text-[#5d6673] md:flex">
-              <span className="text-[#111827]">판례검색</span>
-              <span>기준판례</span>
-              <span>비교</span>
-              <span>피드백</span>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       <section className="border-b border-[#d7dce2] bg-white">
         <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
@@ -475,7 +459,7 @@ export default function Home() {
               data={data}
               isLoading={isLoading}
               isSelecting={isSelecting}
-              resultDetails={resultDetails}
+              mode={mode}
               resultTitle={resultTitle}
               results={results}
               onSelectBase={selectBaseCase}
@@ -491,7 +475,7 @@ function SearchWorkspace({
   data,
   isLoading,
   isSelecting,
-  resultDetails,
+  mode,
   resultTitle,
   results,
   onSelectBase,
@@ -499,7 +483,7 @@ function SearchWorkspace({
   data: StatuteSearchResponse | NaturalSearchResponse | null;
   isLoading: boolean;
   isSelecting: boolean;
-  resultDetails: Record<string, CaseDetail>;
+  mode: SearchMode;
   resultTitle: string;
   results: SearchResult[];
   onSelectBase: (result: SearchResult) => void;
@@ -522,10 +506,10 @@ function SearchWorkspace({
         <div className="grid gap-3">
           {results.map((result, index) => (
             <ResultCard
-              detail={resultDetails[result.case_id]}
               index={index + 1}
               isSelecting={isSelecting}
               key={result.case_id}
+              mode={mode}
               onSelect={() => onSelectBase(result)}
               result={result}
             />
@@ -633,27 +617,138 @@ function ComparisonWorkspace({
         </button>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      {/* 판례 헤더: 기준 vs 비교 */}
+      <div className="grid gap-4 md:grid-cols-2">
         <CompareSide title="기준 판례" result={baseCase} detail={baseDetail} />
         <CompareSide title="비교 판례" candidate={compareTarget} detail={compareDetail} />
       </div>
 
-      {isLoading ? <LoadingResults /> : null}
+      {isLoading ? <div className="mt-4"><LoadingResults /></div> : null}
 
       {analysis ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
-          <AnalysisBlock title="공통점" items={analysis.analysis.common_points.map((item) => item.text)} />
-          <AnalysisBlock
-            title="주요 차이점"
-            items={analysis.analysis.material_differences.map(
-              (item) => `${item.factor}: 기준은 ${item.base}, 비교 판례는 ${item.compare}. ${item.meaning}`
+        <div className="mt-4 grid gap-4">
+
+          {/* 1. 결론 차이 — 가장 중요, 최상단 배너 */}
+          <section className="rounded-[8px] border-l-4 border-[#dc2626] bg-[#fff5f5] p-5">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#dc2626] text-xs font-bold text-white">!</span>
+              <h3 className="text-sm font-bold text-[#991b1b]">결론이 갈린 이유</h3>
+            </div>
+            <p className="mt-3 text-sm leading-7 text-[#1f2937]">{analysis.analysis.result_difference}</p>
+            {analysis.analysis.fallback_used && (
+              <p className="mt-2 text-xs text-[#9ca3af]">AI 분석 불가로 구조화 데이터 기반 결과입니다.</p>
             )}
-          />
-          <AnalysisBlock title="판단을 가른 지점" items={analysis.analysis.turning_points.map((item) => `${item.title}: ${item.explanation}`)} />
-          <section className="rounded-[8px] border border-[#d7dce2] bg-white p-4 lg:col-span-3">
-            <h3 className="text-sm font-bold text-[#111827]">결론 차이</h3>
-            <p className="mt-2 text-sm leading-6 text-[#303846]">{analysis.analysis.result_difference}</p>
           </section>
+
+          {/* 2. 판단을 가른 지점 — 개별 강조 카드 */}
+          {analysis.analysis.turning_points.length > 0 && (
+            <section>
+              <h3 className="mb-3 text-sm font-bold text-[#111827]">
+                판단을 가른 지점
+                <span className="ml-2 rounded-full bg-[#fef3c7] px-2 py-0.5 text-xs font-semibold text-[#92400e]">
+                  {analysis.analysis.turning_points.length}개
+                </span>
+              </h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {analysis.analysis.turning_points.map((point, idx) => (
+                  <article key={`tp-${idx}`} className="rounded-[8px] border border-[#fde68a] bg-[#fffbeb] p-4">
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#f59e0b] text-xs font-bold text-white">
+                        {idx + 1}
+                      </span>
+                      <h4 className="text-sm font-bold text-[#78350f]">{point.title}</h4>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-[#374151]">{point.explanation}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 3. 주요 차이점 — factor/기준값/비교값/의미 대비 표 */}
+          {analysis.analysis.material_differences.length > 0 && (
+            <section>
+              <h3 className="mb-3 text-sm font-bold text-[#111827]">주요 차이점</h3>
+              <div className="overflow-x-auto rounded-[8px] border border-[#d7dce2] bg-white">
+                <table className="w-full min-w-[540px] text-sm">
+                  <thead>
+                    <tr className="border-b border-[#e5eaf0] bg-[#f8fafc]">
+                      <th className="px-4 py-3 text-left text-xs font-bold text-[#667085]">쟁점</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-[#2563eb]">기준 판례</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-[#7c3aed]">비교 판례</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-[#667085]">법적 의미</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analysis.analysis.material_differences.map((diff, idx) => (
+                      <tr
+                        key={`diff-${idx}`}
+                        className={`border-b border-[#f0f3f7] ${idx % 2 === 1 ? "bg-[#fafbfc]" : "bg-white"}`}
+                      >
+                        <td className="px-4 py-3 font-semibold text-[#111827]">{diff.factor}</td>
+                        <td className="px-4 py-3 text-[#1e3a5f]">{diff.base}</td>
+                        <td className="px-4 py-3 text-[#3b0764]">{diff.compare}</td>
+                        <td className="px-4 py-3 text-[#526070]">{diff.meaning}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* 4. 공통 사실관계 */}
+          {analysis.analysis.common_points.length > 0 && (
+            <section className="rounded-[8px] border border-[#d7dce2] bg-white p-4">
+              <h3 className="mb-3 text-sm font-bold text-[#111827]">공통 사실관계</h3>
+              <ul className="grid gap-2">
+                {analysis.analysis.common_points.map((point, idx) => (
+                  <li key={`cp-${idx}`} className="flex items-start gap-2 text-sm leading-6 text-[#303846]">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#94a3b8]" />
+                    {point.text}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* 5. 원문 근거 */}
+          {analysis.evidence_links && (
+            (analysis.evidence_links.base.length > 0 || analysis.evidence_links.compare.length > 0) && (
+              <section>
+                <h3 className="mb-3 text-sm font-bold text-[#111827]">원문 근거</h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {analysis.evidence_links.base.length > 0 && (
+                    <div className="rounded-[8px] border border-[#d7dce2] bg-white p-4">
+                      <p className="mb-2 text-xs font-bold text-[#2563eb]">기준 판례 근거</p>
+                      {analysis.evidence_links.base.map((ev) => (
+                        <div key={ev.evidence_id} className="mb-3 last:mb-0">
+                          <p className="font-mono text-xs text-[#667085]">{ev.evidence_id} · {ev.section_type}</p>
+                          <p className="mt-1 text-sm leading-6 text-[#374151]">{ev.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {analysis.evidence_links.compare.length > 0 && (
+                    <div className="rounded-[8px] border border-[#d7dce2] bg-white p-4">
+                      <p className="mb-2 text-xs font-bold text-[#7c3aed]">비교 판례 근거</p>
+                      {analysis.evidence_links.compare.map((ev) => (
+                        <div key={ev.evidence_id} className="mb-3 last:mb-0">
+                          <p className="font-mono text-xs text-[#667085]">{ev.evidence_id} · {ev.section_type}</p>
+                          <p className="mt-1 text-sm leading-6 text-[#374151]">{ev.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )
+          )}
+
+          {/* 법률 고지 */}
+          <p className="text-xs leading-5 text-[#9ca3af]">
+            {analysis.disclaimer ?? "본 비교 분석은 AI가 생성한 참고 자료이며 법적 효력이 없습니다. 실제 사건 대응은 반드시 원문 판례와 전문가 검토를 통해 확인하세요."}
+          </p>
         </div>
       ) : null}
     </section>
@@ -661,29 +756,29 @@ function ComparisonWorkspace({
 }
 
 function ResultCard({
-  detail,
   index,
   isSelecting,
+  mode,
   onSelect,
   result,
 }: {
-  detail?: CaseDetail;
   index: number;
   isSelecting: boolean;
+  mode: SearchMode;
   onSelect: () => void;
   result: SearchResult;
 }) {
   return (
     <article className="rounded-[8px] border border-[#d7dce2] bg-white p-5 shadow-sm">
       <CardHeader
-        badge={`관련도 ${Math.round(result.score * 100)}%`}
+        badge={relevanceBadge(mode, index)}
         courtName={result.court_name}
         date={result.decision_date}
         index={index}
         title={result.case_no || result.case_name}
         subtitle={`${displayCaseName(result.case_name)}${result.legal_domain ? ` · ${result.legal_domain}` : ""}${result.case_type ? ` · ${result.case_type}` : ""}`}
       />
-      <SearchNarrativeSections detail={detail} result={result} />
+      <SearchNarrativeSections result={result} />
       <Tags items={result.cited_articles.slice(0, 5)} />
       <div className="mt-5 flex flex-wrap gap-2">
         <button
@@ -700,6 +795,31 @@ function ResultCard({
   );
 }
 
+function _buildReasoningText(commonFacts: string[], turningPoints: string[]): string {
+  const commons = (commonFacts ?? []).filter(Boolean).slice(0, 2);
+  const turnings = (turningPoints ?? []).filter(Boolean).slice(0, 2);
+
+  const commonSentences = commons.map((item) => {
+    const [label, value] = item.split(": ");
+    return value ? `${label}이(가) '${value}'로 동일합니다.` : item;
+  });
+
+  const turningSentences = turnings.map((item) => {
+    const colonIdx = item.indexOf(": ");
+    if (colonIdx < 0) return item;
+    const label = item.slice(0, colonIdx);
+    const rest = item.slice(colonIdx + 2);
+    const arrowIdx = rest.indexOf(" → ");
+    if (arrowIdx < 0) return item;
+    const from = rest.slice(0, arrowIdx);
+    const to = rest.slice(arrowIdx + 3);
+    return `${label}은(는) '${from}'에서 '${to}'로 달랐습니다.`;
+  });
+
+  const all = [...commonSentences, ...turningSentences];
+  return all.length > 0 ? all.join(" ") : "유사 판단 근거 정보가 없습니다.";
+}
+
 function CandidateCard({
   candidate,
   index,
@@ -709,21 +829,32 @@ function CandidateCard({
   index: number;
   onCompare: () => void;
 }) {
+  const facts =
+    candidate.facts_summary ||
+    candidate.summary_card ||
+    `${displayCaseName(candidate.case_name)} 사건입니다.`;
+
+  const reasoning =
+    candidate.reasoning_summary ||
+    _buildReasoningText(candidate.common_facts, candidate.possible_turning_points);
+
+  const judgment =
+    candidate.judgment_summary ||
+    outcomeToNatural(undefined, candidate.outcome_difference_summary);
+
   return (
     <article className="rounded-[8px] border border-[#d7dce2] bg-white p-5 shadow-sm">
       <CardHeader
-        badge={`유사도 ${Math.round(candidate.scores.final_score * 100)}%`}
         courtName={candidate.court_name}
         date={candidate.decision_date}
         index={index}
         title={candidate.case_no}
         subtitle={candidate.case_name}
       />
-      <p className="mt-4 text-sm leading-6 text-[#303846]">{candidate.summary_card}</p>
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <Score label="사실관계" value={candidate.scores.material_fact_match} />
-        <Score label="조문" value={candidate.scores.statute_overlap} />
-        <Score label="쟁점" value={candidate.scores.facet_match_score} />
+      <div className="mt-4 grid gap-3 lg:grid-cols-3">
+        <NarrativeBlock title="사실관계" text={truncate(facts, 180)} />
+        <NarrativeBlock title="법원의 판단 근거" text={truncate(reasoning, 180)} />
+        <NarrativeBlock title="법원의 판결" text={judgment} />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <button className="rounded-[5px] bg-[#2563eb] px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]" onClick={onCompare} type="button">
@@ -814,24 +945,23 @@ function CompareSide({
   );
 }
 
-function SearchNarrativeSections({ detail, result }: { detail?: CaseDetail; result: SearchResult }) {
-  const facts =
-    detail?.structure.facts ||
-    summarizeMaterialFacts(detail?.structure.material_facts) ||
-    result.summary_card ||
-    `${displayCaseName(result.case_name)} 사건입니다.`;
-  const reasoning =
-    detail?.structure.court_reasoning ||
-    detail?.structure.legal_issue ||
-    (result.cited_articles.length > 0
-      ? `법원은 ${result.cited_articles.slice(0, 3).join(", ")} 등을 중심으로 판단했습니다.`
-      : "검색 결과에 구조화된 판단 근거가 아직 없습니다.");
-  const judgment = detail?.structure.conclusion || summarizeOutcome(detail?.structure.outcome ?? result.outcome);
+function SearchNarrativeSections({ result }: { result: SearchResult }) {
+  // 사전 생성 요약 우선 — 없으면 기존 로직으로 fallback
+  const facts = result.facts_summary
+    || result.summary_card
+    || `${displayCaseName(result.case_name)} 사건입니다.`;
+
+  const reasoning = result.reasoning_summary
+    || (result.cited_articles.length > 0
+      ? `법원은 ${result.cited_articles.slice(0, 3).join(", ")}을(를) 적용하여 판단하였습니다.`
+      : "인용 조문 정보가 아직 없습니다.");
+
+  const judgment = result.judgment_summary || outcomeToNatural(result.outcome);
 
   return (
     <div className="mt-5 grid gap-3 lg:grid-cols-3">
-      <NarrativeBlock title="사실관계" text={facts} />
-      <NarrativeBlock title="법원의 판단 근거" text={reasoning} />
+      <NarrativeBlock title="사실관계" text={truncate(facts, 250)} />
+      <NarrativeBlock title="법원의 판단 근거" text={truncate(reasoning, 200)} />
       <NarrativeBlock title="법원의 판결" text={judgment} />
     </div>
   );
@@ -844,12 +974,17 @@ function CaseNarrativeSections({
   detail?: CaseDetail | null;
   fallbackSummary: string;
 }) {
-  const facts = detail?.structure.facts || summarizeMaterialFacts(detail?.structure.material_facts) || fallbackSummary;
-  const reasoning =
-    detail?.structure.court_reasoning ||
-    detail?.structure.legal_issue ||
-    "구조화된 법원의 판단 근거가 아직 없습니다. 원문에서 판시사항과 판단 이유를 확인하세요.";
-  const judgment = detail?.structure.conclusion || summarizeOutcome(detail?.structure.outcome);
+  const rawFacts = detail?.structure.facts || summarizeMaterialFacts(detail?.structure.material_facts) || fallbackSummary;
+  const facts = truncate(rawFacts, 300);
+
+  const rawReasoning = detail?.structure.court_reasoning || detail?.structure.legal_issue;
+  const reasoning = rawReasoning
+    ? truncateSentences(rawReasoning, 3)
+    : "구조화된 법원의 판단 근거가 아직 없습니다. 원문에서 판시사항과 판단 이유를 확인하세요.";
+
+  const judgment = detail?.structure.conclusion
+    ? truncate(detail.structure.conclusion, 200)
+    : outcomeToNatural(detail?.structure.outcome);
 
   return (
     <div className="mt-5 grid gap-4">
@@ -873,7 +1008,7 @@ function OriginalLink({ caseNo, sourceUrl }: { caseNo: string; sourceUrl?: strin
   return (
     <a
       className="inline-flex items-center rounded-[5px] border border-[#b9c2cf] bg-white px-3 py-2 text-sm font-semibold text-[#344054] transition hover:border-[#2563eb] hover:text-[#2563eb]"
-      href={sourceUrl || lawSearchUrl(caseNo)}
+      href={sourceUrl && !sourceUrl.includes("/DRF/") ? sourceUrl : lawSearchUrl(caseNo)}
       rel="noreferrer"
       target="_blank"
     >
@@ -890,7 +1025,7 @@ function CardHeader({
   subtitle,
   title,
 }: {
-  badge: string;
+  badge?: string;
   courtName: string;
   date: string | null;
   index: number;
@@ -907,9 +1042,11 @@ function CardHeader({
         <h3 className="mt-1 text-lg font-bold text-[#111827]">{title}</h3>
         <p className="mt-1 text-sm text-[#667085]">{subtitle}</p>
       </div>
-      <div className="rounded-[6px] bg-[#eff6ff] px-3 py-2 text-right text-sm font-bold text-[#1d4ed8]">
-        {badge}
-      </div>
+      {badge ? (
+        <div className="rounded-[6px] bg-[#eff6ff] px-3 py-2 text-right text-sm font-bold text-[#1d4ed8]">
+          {badge}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -936,7 +1073,7 @@ function Score({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-[6px] border border-[#e5eaf0] p-3">
       <p className="text-xs font-semibold text-[#667085]">{label}</p>
-      <p className="mt-1 text-lg font-bold text-[#111827]">{Math.round(value * 100)}%</p>
+      <p className="mt-1 text-lg font-bold text-[#111827]">{scoreLevel(value)}</p>
     </div>
   );
 }
@@ -1043,11 +1180,42 @@ function displayCaseName(caseName: string) {
   return caseName.trim().length > 0 ? caseName.trim() : "사건명 없음";
 }
 
+const VALUE_LABELS: Record<string, string> = {
+  "true": "있음",
+  "false": "없음",
+  "True": "있음",
+  "False": "없음",
+  damages: "손해배상",
+  injury: "신체 침해",
+  property: "재산 피해",
+  wrongful_death: "사망",
+  traffic_accident: "교통사고",
+  medical_malpractice: "의료 과실",
+  product_liability: "제조물 책임",
+  civil: "민사",
+  criminal: "형사",
+  administrative: "행정",
+  labor: "노동",
+  family: "가사",
+  commercial: "상사",
+  plaintiff_wins: "원고 승",
+  defendant_wins: "피고 승",
+  partial: "일부 인용",
+  dismissed: "기각",
+  unknown: "미확인",
+};
+
 function formatValue(value: unknown): string {
   if (typeof value === "boolean") return value ? "있음" : "없음";
   if (value === null || value === undefined || value === "") return "-";
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== null && v !== "" && v !== undefined)
+      .map(([k, v]) => `${MATERIAL_LABELS[k] ?? k}: ${formatValue(v)}`);
+    return entries.length > 0 ? entries.join(", ") : "-";
+  }
+  const raw = String(value);
+  return VALUE_LABELS[raw] ?? raw;
 }
 
 function summarizeMaterialFacts(values?: Record<string, unknown>): string {
@@ -1061,10 +1229,72 @@ function summarizeMaterialFacts(values?: Record<string, unknown>): string {
     .join(", ");
 }
 
-function summarizeOutcome(values?: Record<string, unknown>): string {
-  if (!values) return "구조화된 판결 결과가 아직 없습니다. 원문에서 주문과 결론을 확인하세요.";
-  const summary = summarizeMaterialFacts(values);
-  return summary || "구조화된 판결 결과가 아직 없습니다. 원문에서 주문과 결론을 확인하세요.";
+function truncate(text: string, maxLen: number): string {
+  if (!text) return "";
+  const compact = text.replace(/\s+/g, " ").trim();
+  if (compact.length <= maxLen) return compact;
+  return `${compact.slice(0, maxLen - 1)}…`;
+}
+
+function truncateSentences(text: string, maxSentences: number): string {
+  if (!text) return "";
+  const compact = text.replace(/\s+/g, " ").trim();
+  const endings = ["다. ", "다.\n", "다."];
+  let count = 0;
+  let idx = 0;
+  while (idx < compact.length && count < maxSentences) {
+    const next = endings.map((e) => compact.indexOf(e, idx)).filter((i) => i !== -1);
+    if (next.length === 0) break;
+    const nearest = Math.min(...next);
+    count++;
+    idx = nearest + 2;
+  }
+  const result = count >= maxSentences ? compact.slice(0, idx).trim() : compact;
+  return result.length < compact.length ? `${result}…` : result;
+}
+
+const DISPOSITION_KEYWORDS = new Set([
+  "기각한다", "인용한다", "기각", "인용", "각하", "파기환송", "파기자판",
+  "일부인용", "일부 인용", "원고 승", "피고 승",
+]);
+
+function outcomeToNatural(outcome?: Record<string, unknown>, fallbackSummary?: string): string {
+  if (fallbackSummary && fallbackSummary.trim()) return fallbackSummary;
+  if (!outcome || Object.keys(outcome).length === 0) return "";
+
+  const direction = outcome.direction as string | undefined;
+  const disposition = outcome.disposition as string | undefined;
+  const keyFactor = outcome.key_factor as string | undefined;
+  const ratio = outcome.ratio_or_percentage as string | number | undefined;
+
+  const dirLabel = direction ? (VALUE_LABELS[direction] ?? direction) : null;
+  const dispLabel = disposition ? (VALUE_LABELS[disposition.toLowerCase()] ?? VALUE_LABELS[disposition] ?? disposition) : null;
+
+  // key_factor에 주문 키워드가 섞인 경우 표시하지 않음
+  const cleanKeyFactor =
+    keyFactor && !DISPOSITION_KEYWORDS.has(keyFactor) && keyFactor.length < 30
+      ? keyFactor
+      : null;
+
+  const parts: string[] = [];
+  if (dirLabel) parts.push(`판결 방향은 ${dirLabel}입니다.`);
+  if (dispLabel && dispLabel !== dirLabel) parts.push(`주문은 '${dispLabel}'입니다.`);
+  if (cleanKeyFactor) parts.push(`주요 판단 요소는 '${cleanKeyFactor}'입니다.`);
+  if (ratio) parts.push(`비율은 ${ratio}입니다.`);
+
+  return parts.join(" ");
+}
+
+function relevanceBadge(mode: SearchMode, rank: number): string {
+  const dimension = mode === "statute" ? "조문 연관도" : "사실관계 연관도";
+  if (rank <= 3) return `${dimension} 상위 · ${rank}순위`;
+  return `${dimension} ${rank}순위`;
+}
+
+function scoreLevel(value: number): string {
+  if (value < 0.15) return "낮음";
+  if (value < 0.45) return "보통";
+  return "높음";
 }
 
 function lawSearchUrl(caseNo: string) {

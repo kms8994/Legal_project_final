@@ -36,6 +36,12 @@ class CaseSearchRow:
     review_status: str
     confidence_score: float
     material_facts: dict[str, Any] = field(default_factory=dict)
+    # case_summaries 필드 (없으면 None — 서비스 레이어에서 fallback 처리)
+    sum_one_line: str | None = None
+    sum_facts: str | None = None
+    sum_reasoning: str | None = None
+    sum_judgment: str | None = None
+    sum_disposition: str | None = None
 
 
 @dataclass(frozen=True)
@@ -145,10 +151,16 @@ class PostgresStatuteSearchRepository:
         sort: str,
     ) -> list[CaseSearchRow]:
         payload = json.dumps([{"normalized_ref": normalized_ref}], ensure_ascii=False)
+        # 조문 유사도: 검색한 조문이 해당 판례의 인용 조문 중 차지하는 비중이 클수록
+        # (= 인용 조문 수가 적을수록) 그 조문과 더 밀접한 판례로 간주해 상위에 배치한다.
         order_by = (
             "cases.decision_date desc nulls last"
             if sort == "decision_date"
-            else "case_structures.confidence_score desc, cases.decision_date desc nulls last"
+            else (
+                "(1.0 / greatest(jsonb_array_length(case_structures.cited_articles), 1)) desc, "
+                "case_structures.confidence_score desc, "
+                "cases.decision_date desc nulls last"
+            )
         )
         offset = (page - 1) * size
 
@@ -173,7 +185,12 @@ class PostgresStatuteSearchRepository:
                   case_structures.facets,
                   case_structures.evidence_spans,
                   case_structures.review_status,
-                  case_structures.confidence_score
+                  case_structures.confidence_score,
+                  case_summaries.one_line       as sum_one_line,
+                  case_summaries.facts_summary  as sum_facts,
+                  case_summaries.reasoning_summary as sum_reasoning,
+                  case_summaries.judgment_summary  as sum_judgment,
+                  case_summaries.disposition    as sum_disposition
                 from (
                   select distinct on (case_id) *
                   from case_structures
@@ -185,6 +202,7 @@ class PostgresStatuteSearchRepository:
                     processed_at desc
                 ) case_structures
                 join cases on cases.id = case_structures.case_id
+                left join case_summaries on case_summaries.case_id = cases.id
                 where cases.is_deleted = false
                   and case_structures.cited_articles @> cast(:payload as jsonb)
                 order by {order_by}
@@ -194,29 +212,7 @@ class PostgresStatuteSearchRepository:
             {"payload": payload, "size": size, "offset": offset},
         ).mappings().all()
 
-        return [
-            CaseSearchRow(
-                case_id=row["case_id"],
-                case_no=row["case_no"],
-                court_name=row["court_name"],
-                court_level=row["court_level"],
-                decision_date=row["decision_date"],
-                case_name=row["case_name"],
-                case_type=row["case_type"],
-                legal_domain=row["legal_domain"],
-                source_url=row["source_url"],
-                cited_articles=_extract_cited_refs(row["cited_articles"]),
-                facts=row["facts"],
-                conclusion=row["conclusion"],
-                material_facts=dict(row["material_facts"] or {}),
-                outcome=dict(row["outcome"] or {}),
-                facets=dict(row["facets"] or {}),
-                evidence_spans=dict(row["evidence_spans"] or {}),
-                review_status=row["review_status"],
-                confidence_score=float(row["confidence_score"]),
-            )
-            for row in rows
-        ]
+        return [_row_to_search(row) for row in rows]
 
     def list_cases_for_natural_search(self) -> list[CaseSearchRow]:
         rows = self.connection.execute(
@@ -240,7 +236,12 @@ class PostgresStatuteSearchRepository:
                   case_structures.facets,
                   case_structures.evidence_spans,
                   case_structures.review_status,
-                  case_structures.confidence_score
+                  case_structures.confidence_score,
+                  case_summaries.one_line          as sum_one_line,
+                  case_summaries.facts_summary     as sum_facts,
+                  case_summaries.reasoning_summary as sum_reasoning,
+                  case_summaries.judgment_summary  as sum_judgment,
+                  case_summaries.disposition       as sum_disposition
                 from (
                   select distinct on (case_id) *
                   from case_structures
@@ -252,6 +253,7 @@ class PostgresStatuteSearchRepository:
                     processed_at desc
                 ) case_structures
                 join cases on cases.id = case_structures.case_id
+                left join case_summaries on case_summaries.case_id = cases.id
                 where cases.is_deleted = false
                 order by case_structures.confidence_score desc, cases.decision_date desc nulls last
                 limit 500
@@ -259,29 +261,7 @@ class PostgresStatuteSearchRepository:
             )
         ).mappings().all()
 
-        return [
-            CaseSearchRow(
-                case_id=row["case_id"],
-                case_no=row["case_no"],
-                court_name=row["court_name"],
-                court_level=row["court_level"],
-                decision_date=row["decision_date"],
-                case_name=row["case_name"],
-                case_type=row["case_type"],
-                legal_domain=row["legal_domain"],
-                source_url=row["source_url"],
-                cited_articles=_extract_cited_refs(row["cited_articles"]),
-                facts=row["facts"],
-                conclusion=row["conclusion"],
-                material_facts=dict(row["material_facts"] or {}),
-                outcome=dict(row["outcome"] or {}),
-                facets=dict(row["facets"] or {}),
-                evidence_spans=dict(row["evidence_spans"] or {}),
-                review_status=row["review_status"],
-                confidence_score=float(row["confidence_score"]),
-            )
-            for row in rows
-        ]
+        return [_row_to_search(row) for row in rows]
 
     def embedding_scores_for_query(self, query_embedding: str, embedding_model: str) -> dict[str, float]:
         rows = self.connection.execute(
@@ -358,6 +338,34 @@ class PostgresStatuteSearchRepository:
                 )
             )
         return snippets
+
+
+def _row_to_search(row: Any) -> CaseSearchRow:
+    return CaseSearchRow(
+        case_id=row["case_id"],
+        case_no=row["case_no"],
+        court_name=row["court_name"],
+        court_level=row["court_level"],
+        decision_date=row["decision_date"],
+        case_name=row["case_name"],
+        case_type=row["case_type"],
+        legal_domain=row["legal_domain"],
+        source_url=row["source_url"],
+        cited_articles=_extract_cited_refs(row["cited_articles"]),
+        facts=row["facts"],
+        conclusion=row["conclusion"],
+        material_facts=dict(row["material_facts"] or {}),
+        outcome=dict(row["outcome"] or {}),
+        facets=dict(row["facets"] or {}),
+        evidence_spans=dict(row["evidence_spans"] or {}),
+        review_status=row["review_status"],
+        confidence_score=float(row["confidence_score"]),
+        sum_one_line=row["sum_one_line"],
+        sum_facts=row["sum_facts"],
+        sum_reasoning=row["sum_reasoning"],
+        sum_judgment=row["sum_judgment"],
+        sum_disposition=row["sum_disposition"],
+    )
 
 
 def _extract_cited_refs(cited_articles: Any) -> list[str]:
