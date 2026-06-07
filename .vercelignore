@@ -1,0 +1,11 @@
+.pytest_cache
+__pycache__
+*.pyc
+.venv
+node_modules
+data
+pipelines
+*.log
+*.err.log
+*.out.log
+.claude

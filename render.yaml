@@ -1,0 +1,24 @@
+databases:
+  - name: caselens-db
+    plan: free
+    databaseName: caselens
+    user: caselens
+    postgresMajorVersion: 16
+
+services:
+  - type: web
+    name: caselens-api
+    runtime: python
+    plan: free
+    rootDir: apps/search-api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: caselens-db
+          property: connectionURI
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.12"

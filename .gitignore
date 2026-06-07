@@ -15,3 +15,5 @@ data/api_samples/*.json
 data/api_samples/*.html
 data/api_samples/*.xml
 !data/api_samples/.gitkeep
+
+.vercel
