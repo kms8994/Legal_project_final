@@ -1110,7 +1110,7 @@ function ParsedIntentPanel({ data }: { data: NaturalSearchResponse }) {
 
 function LoadingResults({ hint }: { hint?: string }) {
   const [elapsed, setElapsed] = useState(0);
-  const ref = useRef<ReturnType<typeof setInterval>>();
+  const ref = useRef<ReturnType<typeof setInterval>>(undefined);
   useEffect(() => {
     setElapsed(0);
     ref.current = setInterval(() => setElapsed((s) => s + 1), 1000);
