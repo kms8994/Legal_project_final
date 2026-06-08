@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FeedbackForm } from "./FeedbackForm";
 
-const SEARCH_API_URL = process.env.SEARCH_API_URL ?? "http://localhost:8000";
+const SEARCH_API_URL = process.env.SEARCH_API_URL ?? "http://127.0.0.1:8000";
 
 type CompareAnalysis = {
   base: {
@@ -181,15 +181,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
           <p className="mt-3 text-sm leading-6 text-[#1f2937]">{data.analysis.result_difference}</p>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="grid gap-4 lg:grid-cols-2">
           <ClaimList items={data.analysis.common_points} title="공통점" />
           <DifferenceList items={data.analysis.material_differences} title="주요 차이점" />
-          <TurningPointList items={data.analysis.turning_points} title="판단을 가른 지점" />
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-2">
-          <EvidenceList items={data.evidence_links.base} title="기준 판례 근거" />
-          <EvidenceList items={data.evidence_links.compare} title="비교 판례 근거" />
         </section>
 
         <FeedbackForm baseCaseId={data.base.case_id} compareCaseId={data.compare.case_id} />
@@ -270,61 +264,6 @@ function DifferenceList({
           ))
         ) : (
           <p className="text-sm text-[#667085]">구조화된 주요 차이점이 없습니다.</p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function TurningPointList({
-  title,
-  items,
-}: {
-  title: string;
-  items: CompareAnalysis["analysis"]["turning_points"];
-}) {
-  return (
-    <section className="rounded-[8px] border border-[#d7dce2] bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-bold text-[#111827]">{title}</h2>
-      <div className="mt-3 grid gap-3">
-        {items.length > 0 ? (
-          items.map((item) => (
-            <article className="text-sm leading-6 text-[#303846]" key={item.title}>
-              <p className="font-semibold text-[#111827]">{item.title}</p>
-              <p>{item.explanation}</p>
-              <EvidenceIds ids={[...item.evidence_ids.base, ...item.evidence_ids.compare]} />
-            </article>
-          ))
-        ) : (
-          <p className="text-sm text-[#667085]">구조화된 판단 차이 지점이 없습니다.</p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function EvidenceList({
-  title,
-  items,
-}: {
-  title: string;
-  items: CompareAnalysis["evidence_links"]["base"];
-}) {
-  return (
-    <section className="rounded-[8px] border border-[#d7dce2] bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-bold text-[#111827]">{title}</h2>
-      <div className="mt-3 grid gap-3">
-        {items.length > 0 ? (
-          items.map((item) => (
-            <article className="text-sm leading-6 text-[#303846]" key={item.evidence_id}>
-              <p className="font-mono text-xs text-[#667085]">
-                {item.evidence_id} · {item.section_type}
-              </p>
-              <p className="mt-1">{item.text}</p>
-            </article>
-          ))
-        ) : (
-          <p className="text-sm text-[#667085]">연결된 근거가 없습니다.</p>
         )}
       </div>
     </section>

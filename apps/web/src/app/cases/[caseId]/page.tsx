@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-const SEARCH_API_URL = process.env.SEARCH_API_URL ?? "http://localhost:8000";
+const SEARCH_API_URL = process.env.SEARCH_API_URL ?? "http://127.0.0.1:8000";
 
 type CaseDetail = {
   case: {

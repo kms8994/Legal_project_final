@@ -2,6 +2,30 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
+const DOMAIN_KO: Record<string, string> = {
+  damages: "손해배상",
+  property: "재산권",
+  criminal: "형사",
+  contract: "계약",
+  tort: "불법행위",
+  labor: "노동",
+  family: "가사",
+  administrative: "행정",
+  tax: "조세",
+  unjust_enrichment: "부당이득",
+  "과실 다툼": "과실 다툼",
+  "주요 법률 분야": "주요 법률 분야",
+  real_estate: "부동산",
+  insurance: "보험",
+  corporate: "회사",
+  bankruptcy: "파산",
+  ip: "지식재산",
+  civil: "민사",
+};
+function toKo(v: string): string {
+  return DOMAIN_KO[v.toLowerCase()] ?? v;
+}
+
 type SearchMode = "statute" | "natural";
 type WorkflowStep = "search" | "candidates" | "comparison";
 
@@ -629,43 +653,17 @@ function ComparisonWorkspace({
         <div className="mt-4 grid gap-4">
 
           {/* 1. 결론 차이 — 가장 중요, 최상단 배너 */}
+          {!analysis.analysis.fallback_used && analysis.analysis.result_difference && (
           <section className="rounded-[8px] border-l-4 border-[#dc2626] bg-[#fff5f5] p-5">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#dc2626] text-xs font-bold text-white">!</span>
               <h3 className="text-sm font-bold text-[#991b1b]">결론이 갈린 이유</h3>
             </div>
             <p className="mt-3 text-sm leading-7 text-[#1f2937]">{analysis.analysis.result_difference}</p>
-            {analysis.analysis.fallback_used && (
-              <p className="mt-2 text-xs text-[#9ca3af]">AI 분석 불가로 구조화 데이터 기반 결과입니다.</p>
-            )}
           </section>
-
-          {/* 2. 판단을 가른 지점 — 개별 강조 카드 */}
-          {analysis.analysis.turning_points.length > 0 && (
-            <section>
-              <h3 className="mb-3 text-sm font-bold text-[#111827]">
-                판단을 가른 지점
-                <span className="ml-2 rounded-full bg-[#fef3c7] px-2 py-0.5 text-xs font-semibold text-[#92400e]">
-                  {analysis.analysis.turning_points.length}개
-                </span>
-              </h3>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {analysis.analysis.turning_points.map((point, idx) => (
-                  <article key={`tp-${idx}`} className="rounded-[8px] border border-[#fde68a] bg-[#fffbeb] p-4">
-                    <div className="flex items-start gap-2">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#f59e0b] text-xs font-bold text-white">
-                        {idx + 1}
-                      </span>
-                      <h4 className="text-sm font-bold text-[#78350f]">{point.title}</h4>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-[#374151]">{point.explanation}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
           )}
 
-          {/* 3. 주요 차이점 — factor/기준값/비교값/의미 대비 표 */}
+          {/* 2. 주요 차이점 — factor/기준값/비교값/의미 대비 표 */}
           {analysis.analysis.material_differences.length > 0 && (
             <section>
               <h3 className="mb-3 text-sm font-bold text-[#111827]">주요 차이점</h3>
@@ -685,9 +683,9 @@ function ComparisonWorkspace({
                         key={`diff-${idx}`}
                         className={`border-b border-[#f0f3f7] ${idx % 2 === 1 ? "bg-[#fafbfc]" : "bg-white"}`}
                       >
-                        <td className="px-4 py-3 font-semibold text-[#111827]">{diff.factor}</td>
-                        <td className="px-4 py-3 text-[#1e3a5f]">{diff.base}</td>
-                        <td className="px-4 py-3 text-[#3b0764]">{diff.compare}</td>
+                        <td className="px-4 py-3 font-semibold text-[#111827]">{toKo(diff.factor)}</td>
+                        <td className="px-4 py-3 text-[#1e3a5f]">{toKo(diff.base)}</td>
+                        <td className="px-4 py-3 text-[#3b0764]">{toKo(diff.compare)}</td>
                         <td className="px-4 py-3 text-[#526070]">{diff.meaning}</td>
                       </tr>
                     ))}
@@ -695,54 +693,6 @@ function ComparisonWorkspace({
                 </table>
               </div>
             </section>
-          )}
-
-          {/* 4. 공통 사실관계 */}
-          {analysis.analysis.common_points.length > 0 && (
-            <section className="rounded-[8px] border border-[#d7dce2] bg-white p-4">
-              <h3 className="mb-3 text-sm font-bold text-[#111827]">공통 사실관계</h3>
-              <ul className="grid gap-2">
-                {analysis.analysis.common_points.map((point, idx) => (
-                  <li key={`cp-${idx}`} className="flex items-start gap-2 text-sm leading-6 text-[#303846]">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#94a3b8]" />
-                    {point.text}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* 5. 원문 근거 */}
-          {analysis.evidence_links && (
-            (analysis.evidence_links.base.length > 0 || analysis.evidence_links.compare.length > 0) && (
-              <section>
-                <h3 className="mb-3 text-sm font-bold text-[#111827]">원문 근거</h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {analysis.evidence_links.base.length > 0 && (
-                    <div className="rounded-[8px] border border-[#d7dce2] bg-white p-4">
-                      <p className="mb-2 text-xs font-bold text-[#2563eb]">기준 판례 근거</p>
-                      {analysis.evidence_links.base.map((ev) => (
-                        <div key={ev.evidence_id} className="mb-3 last:mb-0">
-                          <p className="font-mono text-xs text-[#667085]">{ev.evidence_id} · {ev.section_type}</p>
-                          <p className="mt-1 text-sm leading-6 text-[#374151]">{ev.text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {analysis.evidence_links.compare.length > 0 && (
-                    <div className="rounded-[8px] border border-[#d7dce2] bg-white p-4">
-                      <p className="mb-2 text-xs font-bold text-[#7c3aed]">비교 판례 근거</p>
-                      {analysis.evidence_links.compare.map((ev) => (
-                        <div key={ev.evidence_id} className="mb-3 last:mb-0">
-                          <p className="font-mono text-xs text-[#667085]">{ev.evidence_id} · {ev.section_type}</p>
-                          <p className="mt-1 text-sm leading-6 text-[#374151]">{ev.text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section>
-            )
           )}
 
           {/* 법률 고지 */}
